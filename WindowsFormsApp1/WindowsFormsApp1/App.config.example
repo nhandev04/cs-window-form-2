@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <connectionStrings>
+        <!--
+        ⚠️ HƯỚNG DẪN CẤU HÌNH:
+        1. Copy file này thành "App.config"
+        2. Thay đổi các thông tin sau cho đúng với SQL Server của bạn:
+           - Server: localhost (hoặc tên server của bạn)
+           - Database: QuanLyNhanSu
+           - User Id: sa (hoặc username của bạn)
+           - Password: YOUR_PASSWORD_HERE (thay bằng password thật)
+
+        ⚠️ QUAN TRỌNG:
+        - File App.config chứa password thật đã được thêm vào .gitignore
+        - KHÔNG commit file App.config lên GitHub!
+        -->
+        <add name="EmployeeDBConnection"
+             connectionString="Server=localhost;Database=QuanLyNhanSu;User Id=sa;Password=YOUR_PASSWORD_HERE;TrustServerCertificate=True;"
+             providerName="System.Data.SqlClient" />
+    </connectionStrings>
+    <startup>
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.7.2" />
+    </startup>
+</configuration>
