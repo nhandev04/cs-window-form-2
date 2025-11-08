@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows.Forms;
 using WindowsFormsApp1.BLL;
 using WindowsFormsApp1.Models;
+using WindowsFormsApp1.Utils;
 
 namespace WindowsFormsApp1
 {
@@ -857,18 +858,83 @@ if (cboFilterPosition.Items.Count > 0)
 // Only set SelectedIndex if items exist
       if (cboFilterGender.Items.Count > 0)
        {
-      cboFilterGender.SelectedIndex = 0;
+   cboFilterGender.SelectedIndex = 0;
   }
         if (cboFilterDepartment.Items.Count > 0)
      {
    cboFilterDepartment.SelectedIndex = 0;
-        }
+     }
        if (cboFilterPosition.Items.Count > 0)
  {
      cboFilterPosition.SelectedIndex = 0;
  }
        
     LoadAllEmployees();
+        }
+
+        /// <summary>
+        /// Export Excel button click - Export current employee list to Excel
+        /// </summary>
+      private void btnExportExcel_Click(object sender, EventArgs e)
+        {
+            try
+            {
+ // Get current employee list from DataGridView
+          List<Employee> employeesToExport = GetCurrentEmployeeList();
+     
+     if (employeesToExport == null || employeesToExport.Count == 0)
+                {
+            MessageBox.Show("Không có dữ liệu nhân viên để xuất!", "Thông báo", 
+          MessageBoxButtons.OK, MessageBoxIcon.Information);
+         return;
+            }
+
+        // Show progress
+   this.Cursor = Cursors.WaitCursor;
+            
+              // Export to Excel
+    ExcelHelper.ExportEmployeesToExcel(employeesToExport);
+      }
+       catch (Exception ex)
+       {
+   MessageBox.Show($"Lỗi khi xuất Excel: {ex.Message}", "Lỗi", 
+MessageBoxButtons.OK, MessageBoxIcon.Error);
+   }
+            finally
+   {
+    this.Cursor = Cursors.Default;
+ }
+   }
+
+   /// <summary>
+        /// Get current employee list from DataGridView
+        /// </summary>
+        private List<Employee> GetCurrentEmployeeList()
+        {
+            List<Employee> employees = new List<Employee>();
+  
+            try
+         {
+          foreach (DataGridViewRow row in dgvEmployees.Rows)
+{
+   if (row.Cells["ID"].Value != null)
+        {
+           int employeeId = Convert.ToInt32(row.Cells["ID"].Value);
+            Employee emp = employeeBLL.GetEmployeeById(employeeId);
+      if (emp != null)
+       {
+       employees.Add(emp);
+    }
+          }
+          }
+            }
+            catch (Exception ex)
+            {
+       MessageBox.Show($"Lỗi khi lấy danh sách nhân viên: {ex.Message}", "Lỗi", 
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+      
+   return employees;
         }
     }
 }

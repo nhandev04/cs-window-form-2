@@ -14,12 +14,23 @@ namespace WindowsFormsApp1.DAL
 
             using (SqlConnection conn = new SqlConnection(DatabaseConfig.ConnectionString))
             {
-                string query = @"SELECT a.Id, a.EmployeeId, e.FullName as EmployeeName, e.EmployeeCode,
-                                       a.AttendanceDate, a.CheckInTime, a.CheckOutTime, a.WorkingHours,
-                                       a.Status, a.Notes, a.CreatedDate, a.CreatedBy
-                                FROM Attendance a
-                                INNER JOIN Employees e ON a.EmployeeId = e.Id
-                                ORDER BY a.AttendanceDate DESC, a.CheckInTime DESC";
+                string query = @"SELECT a.Id, a.EmployeeId, 
+         ISNULL(e.FullName, 'Unknown') as EmployeeName, 
+    e.EmployeeCode,
+        d.DepartmentName, 
+         a.AttendanceDate, 
+     a.CheckInTime, 
+         a.CheckOutTime, 
+  a.WorkingHours,
+      ISNULL(a.Status, 'Present') as Status, 
+        a.Notes, 
+       ISNULL(a.CreatedDate, GETDATE()) as CreatedDate, 
+     a.CreatedBy
+    FROM Attendance a
+       INNER JOIN Employees e ON a.EmployeeId = e.Id
+      LEFT JOIN Departments d ON e.DepartmentId = d.Id
+          WHERE a.CheckInTime IS NOT NULL
+             ORDER BY a.AttendanceDate DESC, a.CheckInTime DESC";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
 
@@ -48,143 +59,185 @@ namespace WindowsFormsApp1.DAL
 
             using (SqlConnection conn = new SqlConnection(DatabaseConfig.ConnectionString))
             {
-                string query = @"SELECT a.Id, a.EmployeeId, e.FullName as EmployeeName, e.EmployeeCode,
-                                       a.AttendanceDate, a.CheckInTime, a.CheckOutTime, a.WorkingHours,
-                                       a.Status, a.Notes, a.CreatedDate, a.CreatedBy
-                                FROM Attendance a
-                                INNER JOIN Employees e ON a.EmployeeId = e.Id
-                                WHERE a.EmployeeId = @EmployeeId
-                                ORDER BY a.AttendanceDate DESC";
+                string query = @"SELECT a.Id, a.EmployeeId, 
+        ISNULL(e.FullName, 'Unknown') as EmployeeName, 
+      e.EmployeeCode,
+   d.DepartmentName, 
+                   a.AttendanceDate, 
+        a.CheckInTime, 
+      a.CheckOutTime, 
+    a.WorkingHours,
+        ISNULL(a.Status, 'Present') as Status, 
+ a.Notes, 
+       ISNULL(a.CreatedDate, GETDATE()) as CreatedDate, 
+        a.CreatedBy
+          FROM Attendance a
+           INNER JOIN Employees e ON a.EmployeeId = e.Id
+   LEFT JOIN Departments d ON e.DepartmentId = d.Id
+        WHERE a.EmployeeId = @EmployeeId AND a.CheckInTime IS NOT NULL
+    ORDER BY a.AttendanceDate DESC";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+        SqlCommand cmd = new SqlCommand(query, conn);
+     cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
 
-                try
+             try
                 {
-                    conn.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
+           conn.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
 
-                    while (reader.Read())
-                    {
-                        attendances.Add(MapReaderToAttendance(reader));
-                    }
-                }
-                catch (Exception ex)
+          while (reader.Read())
+              {
+          attendances.Add(MapReaderToAttendance(reader));
+            }
+             }
+        catch (Exception ex)
                 {
-                    throw new Exception("Error retrieving attendance: " + ex.Message);
-                }
+  throw new Exception("Error retrieving attendance: " + ex.Message);
+     }
             }
 
-            return attendances;
-        }
+        return attendances;
+    }
 
-        public List<Attendance> GetAttendanceByDateRange(DateTime fromDate, DateTime toDate)
-        {
+    public List<Attendance> GetAttendanceByDateRange(DateTime fromDate, DateTime toDate)
+   {
             List<Attendance> attendances = new List<Attendance>();
 
-            using (SqlConnection conn = new SqlConnection(DatabaseConfig.ConnectionString))
-            {
-                string query = @"SELECT a.Id, a.EmployeeId, e.FullName as EmployeeName, e.EmployeeCode,
-                                       a.AttendanceDate, a.CheckInTime, a.CheckOutTime, a.WorkingHours,
-                                       a.Status, a.Notes, a.CreatedDate, a.CreatedBy
-                                FROM Attendance a
-                                INNER JOIN Employees e ON a.EmployeeId = e.Id
-                                WHERE a.AttendanceDate >= @FromDate AND a.AttendanceDate <= @ToDate
-                                ORDER BY a.AttendanceDate DESC, a.CheckInTime DESC";
+      using (SqlConnection conn = new SqlConnection(DatabaseConfig.ConnectionString))
+ {
+            string query = @"SELECT a.Id, a.EmployeeId, 
+    ISNULL(e.FullName, 'Unknown') as EmployeeName, 
+             e.EmployeeCode,
+             d.DepartmentName, 
+          a.AttendanceDate, 
+             a.CheckInTime, 
+          a.CheckOutTime, 
+a.WorkingHours,
+           ISNULL(a.Status, 'Present') as Status, 
+  a.Notes, 
+        ISNULL(a.CreatedDate, GETDATE()) as CreatedDate, 
+   a.CreatedBy
+         FROM Attendance a
+    INNER JOIN Employees e ON a.EmployeeId = e.Id
+  LEFT JOIN Departments d ON e.DepartmentId = d.Id
+       WHERE a.AttendanceDate >= @FromDate AND a.AttendanceDate <= @ToDate
+  AND a.CheckInTime IS NOT NULL
+          ORDER BY a.AttendanceDate DESC, a.CheckInTime DESC";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@FromDate", fromDate.Date);
-                cmd.Parameters.AddWithValue("@ToDate", toDate.Date);
+        SqlCommand cmd = new SqlCommand(query, conn);
+   cmd.Parameters.AddWithValue("@FromDate", fromDate.Date);
+   cmd.Parameters.AddWithValue("@ToDate", toDate.Date);
 
-                try
-                {
-                    conn.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
+          try
+     {
+         conn.Open();
+          SqlDataReader reader = cmd.ExecuteReader();
 
-                    while (reader.Read())
-                    {
-                        attendances.Add(MapReaderToAttendance(reader));
-                    }
+                while (reader.Read())
+       {
+    attendances.Add(MapReaderToAttendance(reader));
+         }
                 }
-                catch (Exception ex)
-                {
-                    throw new Exception("Error retrieving attendance: " + ex.Message);
-                }
-            }
+    catch (Exception ex)
+  {
+     throw new Exception("Error retrieving attendance: " + ex.Message);
+    }
+       }
 
-            return attendances;
-        }
+       return attendances;
+      }
 
-        public Attendance GetAttendanceById(int id)
+public Attendance GetAttendanceById(int id)
         {
-            Attendance attendance = null;
+   Attendance attendance = null;
 
             using (SqlConnection conn = new SqlConnection(DatabaseConfig.ConnectionString))
             {
-                string query = @"SELECT a.Id, a.EmployeeId, e.FullName as EmployeeName, e.EmployeeCode,
-                                       a.AttendanceDate, a.CheckInTime, a.CheckOutTime, a.WorkingHours,
-                                       a.Status, a.Notes, a.CreatedDate, a.CreatedBy
-                                FROM Attendance a
-                                INNER JOIN Employees e ON a.EmployeeId = e.Id
-                                WHERE a.Id = @Id";
+                string query = @"SELECT a.Id, a.EmployeeId, 
+   ISNULL(e.FullName, 'Unknown') as EmployeeName, 
+          e.EmployeeCode,
+   d.DepartmentName, 
+         a.AttendanceDate, 
+a.CheckInTime, 
+           a.CheckOutTime, 
+  a.WorkingHours,
+       ISNULL(a.Status, 'Present') as Status, 
+            a.Notes, 
+            ISNULL(a.CreatedDate, GETDATE()) as CreatedDate, 
+        a.CreatedBy
+          FROM Attendance a
+    INNER JOIN Employees e ON a.EmployeeId = e.Id
+   LEFT JOIN Departments d ON e.DepartmentId = d.Id
+     WHERE a.Id = @Id AND a.CheckInTime IS NOT NULL";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Id", id);
+        SqlCommand cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@Id", id);
 
-                try
-                {
-                    conn.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
+ try
+          {
+          conn.Open();
+    SqlDataReader reader = cmd.ExecuteReader();
 
-                    if (reader.Read())
-                    {
-                        attendance = MapReaderToAttendance(reader);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception("Error retrieving attendance: " + ex.Message);
-                }
-            }
+           if (reader.Read())
+  {
+               attendance = MapReaderToAttendance(reader);
+    }
+     }
+           catch (Exception ex)
+          {
+           throw new Exception("Error retrieving attendance: " + ex.Message);
+    }
+   }
 
-            return attendance;
-        }
+     return attendance;
+ }
 
         public Attendance GetTodayAttendance(int employeeId)
         {
             Attendance attendance = null;
 
-            using (SqlConnection conn = new SqlConnection(DatabaseConfig.ConnectionString))
-            {
-                string query = @"SELECT TOP 1 a.Id, a.EmployeeId, e.FullName as EmployeeName, e.EmployeeCode,
-                                       a.AttendanceDate, a.CheckInTime, a.CheckOutTime, a.WorkingHours,
-                                       a.Status, a.Notes, a.CreatedDate, a.CreatedBy
-                                FROM Attendance a
-                                INNER JOIN Employees e ON a.EmployeeId = e.Id
-                                WHERE a.EmployeeId = @EmployeeId AND a.AttendanceDate = @Today
-                                ORDER BY a.CheckInTime DESC";
+          using (SqlConnection conn = new SqlConnection(DatabaseConfig.ConnectionString))
+        {
+                string query = @"SELECT TOP 1 a.Id, a.EmployeeId, 
+         ISNULL(e.FullName, 'Unknown') as EmployeeName, 
+     e.EmployeeCode,
+      d.DepartmentName, 
+              a.AttendanceDate, 
+            a.CheckInTime, 
+               a.CheckOutTime, 
+   a.WorkingHours,
+         ISNULL(a.Status, 'Present') as Status, 
+a.Notes, 
+       ISNULL(a.CreatedDate, GETDATE()) as CreatedDate, 
+    a.CreatedBy
+          FROM Attendance a
+  INNER JOIN Employees e ON a.EmployeeId = e.Id
+          LEFT JOIN Departments d ON e.DepartmentId = d.Id
+          WHERE a.EmployeeId = @EmployeeId AND a.AttendanceDate = @Today
+           AND a.CheckInTime IS NOT NULL
+               ORDER BY a.CheckInTime DESC";
 
                 SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
-                cmd.Parameters.AddWithValue("@Today", DateTime.Today);
+          cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+         cmd.Parameters.AddWithValue("@Today", DateTime.Today);
 
-                try
-                {
-                    conn.Open();
-                    SqlDataReader reader = cmd.ExecuteReader();
+      try
+             {
+      conn.Open();
+       SqlDataReader reader = cmd.ExecuteReader();
 
-                    if (reader.Read())
-                    {
-                        attendance = MapReaderToAttendance(reader);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception("Error retrieving today's attendance: " + ex.Message);
-                }
+           if (reader.Read())
+        {
+           attendance = MapReaderToAttendance(reader);
+  }
+        }
+        catch (Exception ex)
+              {
+throw new Exception("Error retrieving today's attendance: " + ex.Message);
+           }
             }
 
-            return attendance;
+  return attendance;
         }
 
         public int CheckIn(Attendance attendance)
@@ -297,21 +350,62 @@ namespace WindowsFormsApp1.DAL
 
         private Attendance MapReaderToAttendance(SqlDataReader reader)
         {
-            return new Attendance
-            {
-                Id = Convert.ToInt32(reader["Id"]),
-                EmployeeId = Convert.ToInt32(reader["EmployeeId"]),
-                EmployeeName = reader["EmployeeName"].ToString(),
-                EmployeeCode = reader["EmployeeCode"] != DBNull.Value ? reader["EmployeeCode"].ToString() : null,
-                AttendanceDate = Convert.ToDateTime(reader["AttendanceDate"]),
-                CheckInTime = Convert.ToDateTime(reader["CheckInTime"]),
-                CheckOutTime = reader["CheckOutTime"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(reader["CheckOutTime"]) : null,
-                WorkingHours = reader["WorkingHours"] != DBNull.Value ? (decimal?)Convert.ToDecimal(reader["WorkingHours"]) : null,
-                Status = reader["Status"].ToString(),
-                Notes = reader["Notes"] != DBNull.Value ? reader["Notes"].ToString() : null,
-                CreatedDate = Convert.ToDateTime(reader["CreatedDate"]),
-                CreatedBy = reader["CreatedBy"] != DBNull.Value ? reader["CreatedBy"].ToString() : null
-            };
-        }
+          try
+      {
+  var attendance = new Attendance();
+       
+    // Safe conversion for each field
+       try { attendance.Id = Convert.ToInt32(reader["Id"]); } 
+         catch (Exception ex) { throw new Exception($"Error converting Id: {ex.Message}"); }
+            
+         try { attendance.EmployeeId = Convert.ToInt32(reader["EmployeeId"]); } 
+     catch (Exception ex) { throw new Exception($"Error converting EmployeeId: {ex.Message}"); }
+          
+    try { attendance.EmployeeName = reader["EmployeeName"] != DBNull.Value ? reader["EmployeeName"].ToString() : "Unknown"; } 
+         catch (Exception ex) { throw new Exception($"Error converting EmployeeName: {ex.Message}"); }
+            
+        try { attendance.EmployeeCode = reader["EmployeeCode"] != DBNull.Value ? reader["EmployeeCode"].ToString() : null; } 
+    catch (Exception ex) { throw new Exception($"Error converting EmployeeCode: {ex.Message}"); }
+     
+         try { attendance.DepartmentName = reader["DepartmentName"] != DBNull.Value ? reader["DepartmentName"].ToString() : ""; } 
+      catch (Exception ex) { throw new Exception($"Error converting DepartmentName: {ex.Message}"); }
+      
+   try { attendance.AttendanceDate = Convert.ToDateTime(reader["AttendanceDate"]); } 
+           catch (Exception ex) { throw new Exception($"Error converting AttendanceDate: {ex.Message}"); }
+                
+    // CheckInTime should never be null due to WHERE clause, but add safety check
+         try { 
+     if (reader["CheckInTime"] != DBNull.Value)
+          attendance.CheckInTime = Convert.ToDateTime(reader["CheckInTime"]);
+       else
+              throw new Exception("CheckInTime is unexpectedly null");
+        } 
+         catch (Exception ex) { throw new Exception($"Error converting CheckInTime: {ex.Message}"); }
+     
+     try { attendance.CheckOutTime = reader["CheckOutTime"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(reader["CheckOutTime"]) : null; } 
+       catch (Exception ex) { throw new Exception($"Error converting CheckOutTime: {ex.Message}"); }
+        
+ try { attendance.WorkingHours = reader["WorkingHours"] != DBNull.Value ? (decimal?)Convert.ToDecimal(reader["WorkingHours"]) : null; } 
+           catch (Exception ex) { throw new Exception($"Error converting WorkingHours: {ex.Message}"); }
+    
+             try { attendance.Status = reader["Status"] != DBNull.Value ? reader["Status"].ToString() : "Present"; } 
+      catch (Exception ex) { throw new Exception($"Error converting Status: {ex.Message}"); }
+         
+      try { attendance.Notes = reader["Notes"] != DBNull.Value ? reader["Notes"].ToString() : null; } 
+         catch (Exception ex) { throw new Exception($"Error converting Notes: {ex.Message}"); }
+      
+      try { attendance.CreatedDate = reader["CreatedDate"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedDate"]) : DateTime.Now; } 
+       catch (Exception ex) { throw new Exception($"Error converting CreatedDate: {ex.Message}"); }
+     
+   try { attendance.CreatedBy = reader["CreatedBy"] != DBNull.Value ? reader["CreatedBy"].ToString() : null; } 
+           catch (Exception ex) { throw new Exception($"Error converting CreatedBy: {ex.Message}"); }
+         
+ return attendance;
+      }
+  catch (Exception ex)
+         {
+   throw new Exception($"Error mapping attendance data: {ex.Message}");
+       }
+      }
     }
 }

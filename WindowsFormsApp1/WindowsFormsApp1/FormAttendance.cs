@@ -348,5 +348,70 @@ namespace WindowsFormsApp1
                 }
             }
         }
+
+        /// <summary>
+        /// Export Excel button click - Export current attendance list to Excel
+        /// </summary>
+        private void btnExportExcel_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Get current attendance list
+                List<Attendance> attendancesToExport = GetCurrentAttendanceList();
+
+                if (attendancesToExport == null || attendancesToExport.Count == 0)
+                {
+                    MessageBox.Show("Không có dữ liệu chấm công để xuất!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // Show progress
+                this.Cursor = Cursors.WaitCursor;
+
+                // Export to Excel with date range
+                ExcelHelper.ExportAttendanceToExcel(attendancesToExport, dtpFrom.Value, dtpTo.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi xuất Excel: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// Get current attendance list from DataGridView
+        /// </summary>
+        private List<Attendance> GetCurrentAttendanceList()
+        {
+            List<Attendance> attendances = new List<Attendance>();
+
+            try
+            {
+                foreach (DataGridViewRow row in dgvAttendance.Rows)
+                {
+                    if (row.Cells["ID"].Value != null)
+                    {
+                        int attendanceId = Convert.ToInt32(row.Cells["ID"].Value);
+                        Attendance att = attendanceBLL.GetAttendanceById(attendanceId);
+                        if (att != null)
+                        {
+                            attendances.Add(att);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi lấy danh sách chấm công: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return attendances;
+        }
     }
 }

@@ -27,14 +27,15 @@ namespace WindowsFormsApp1.Utils
                     null, // oldValue
                     null, // newValue
                     description,
-                    SessionManager.Username,
+                    SessionManager.Username ?? "SYSTEM",
                     SecurityHelper.GetLocalIPAddress(),
-                    SecurityHelper.GetMachineName()
+                    Environment.MachineName
                 );
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore audit errors - should not break application
+                // Log audit errors to Windows Event Log or ignore silently
+                System.Diagnostics.Debug.WriteLine($"Audit Log Error: {ex.Message}");
             }
         }
 
@@ -44,24 +45,27 @@ namespace WindowsFormsApp1.Utils
         public static void LogFieldChange(string tableName, int recordId,
                                          string fieldName, string oldValue, string newValue)
         {
-            try
+            if (oldValue != newValue)
             {
-                auditDAL.AddLog(
-                    tableName,
-                    recordId,
-                    "UPDATE",
-                    fieldName,
-                    oldValue,
-                    newValue,
-                    $"Changed {fieldName}",
-                    SessionManager.Username,
-                    SecurityHelper.GetLocalIPAddress(),
-                    SecurityHelper.GetMachineName()
-                );
-            }
-            catch
-            {
-                // Ignore audit errors
+                try
+                {
+                    auditDAL.AddLog(
+                        tableName,
+                        recordId,
+                        "UPDATE",
+                        fieldName,
+                        oldValue,
+                        newValue,
+                        $"Changed {fieldName}: '{oldValue}' ? '{newValue}'",
+                        SessionManager.Username ?? "SYSTEM",
+                        SecurityHelper.GetLocalIPAddress(),
+                        Environment.MachineName
+                    );
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Audit Log Error: {ex.Message}");
+                }
             }
         }
 

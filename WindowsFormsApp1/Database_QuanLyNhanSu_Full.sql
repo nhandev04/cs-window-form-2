@@ -1,7 +1,7 @@
 -- =============================================
 -- DATABASE QUẢN LÝ NHÂN SỰ - SCRIPT TỔNG HỢP
 -- Tạo database, bảng và thêm dữ liệu mẫu
--- Phiên bản: 1.0 (Fixed)
+-- Phiên bản: 1.1 (Fixed Attendance Structure)
 -- Gộp tất cả các file SQL thành 1 để dễ chạy
 -- =============================================
 
@@ -177,27 +177,27 @@ END
 -- Tạo bảng Employees mới
 CREATE TABLE Employees (
     Id INT PRIMARY KEY IDENTITY(1,1),
-    EmployeeCode NVARCHAR(20) UNIQUE NULL,
+  EmployeeCode NVARCHAR(20) UNIQUE NULL,
     FullName NVARCHAR(100) NOT NULL,
-    Gender NVARCHAR(10) NOT NULL,
+  Gender NVARCHAR(10) NOT NULL,
     DateOfBirth DATE NOT NULL,
     Email NVARCHAR(100) NULL,
     PhoneNumber NVARCHAR(20) NULL,
     Address NVARCHAR(200) NULL,
     Position NVARCHAR(50) NOT NULL,
     DepartmentId INT NULL,
- Department NVARCHAR(50) NULL,
+    Department NVARCHAR(50) NULL,
     Salary DECIMAL(18,2) NOT NULL,
     HireDate DATE NULL,
     Status NVARCHAR(20) DEFAULT N'Active',
-    PhotoPath NVARCHAR(500) NULL,
+ PhotoPath NVARCHAR(500) NULL,
     Notes NVARCHAR(500) NULL,
     CreatedDate DATETIME DEFAULT GETDATE(),
     CreatedBy NVARCHAR(50) NULL,
     UpdatedDate DATETIME NULL,
     UpdatedBy NVARCHAR(50) NULL,
 
-CONSTRAINT FK_Employees_Department FOREIGN KEY (DepartmentId)
+    CONSTRAINT FK_Employees_Department FOREIGN KEY (DepartmentId)
         REFERENCES Departments(Id)
 );
 
@@ -266,87 +266,173 @@ PRINT '✓ Đã cập nhật quản lý phòng ban cho tất cả nhân viên!';
 GO
 
 -- =============================================
--- BƯỚC 5B: THÊM DỮ LIỆU CHẤM CÔNG MẪU
+-- BƯỚC 5A: TẠO BẢNG ATTENDANCE (CHẤM CÔNG)
+-- =============================================
+PRINT '';
+PRINT '📋 BƯỚC 5A: Tạo bảng Attendance...';
+
+-- Xóa bảng nếu đã tồn tại (để reset)
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Attendance')
+BEGIN
+    DROP TABLE Attendance;
+    PRINT '⚠ Đã xóa bảng Attendance cũ';
+END
+
+-- Tạo bảng Attendance với cấu trúc đầy đủ
+CREATE TABLE Attendance (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+EmployeeId INT NOT NULL,
+    AttendanceDate DATE NOT NULL,
+    CheckInTime DATETIME NULL,
+    CheckOutTime DATETIME NULL,
+    WorkingHours DECIMAL(5,2) NULL,
+    Status NVARCHAR(20) NOT NULL DEFAULT 'Present',
+    IsLate BIT DEFAULT 0,
+    LateMinutes INT DEFAULT 0,
+    OvertimeHours DECIMAL(5,2) DEFAULT 0,
+    Notes NVARCHAR(500) NULL,
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    CreatedBy NVARCHAR(50) NULL,
+    UpdatedDate DATETIME NULL,
+    UpdatedBy NVARCHAR(50) NULL,
+
+    CONSTRAINT FK_Attendance_Employee FOREIGN KEY (EmployeeId)
+        REFERENCES Employees(Id) ON DELETE CASCADE,
+    
+    CONSTRAINT UQ_Attendance_EmployeeDate UNIQUE (EmployeeId, AttendanceDate),
+    
+    CONSTRAINT CK_Attendance_Status CHECK (Status IN ('Present', 'Absent', 'Late', 'Leave', 'OnLeave')),
+    
+    -- Ràng buộc: Nếu Status = Present hoặc Late thì phải có CheckInTime
+    CONSTRAINT CK_Attendance_CheckInTime CHECK (
+        (Status IN ('Present', 'Late') AND CheckInTime IS NOT NULL) OR
+     (Status IN ('Absent', 'Leave', 'OnLeave'))
+    )
+);
+
+PRINT '✓ Bảng Attendance đã được tạo với đầy đủ ràng buộc!';
+GO
+
+-- Tạo chỉ mục để tăng hiệu suất truy vấn
+CREATE INDEX IX_Attendance_EmployeeId ON Attendance(EmployeeId);
+CREATE INDEX IX_Attendance_Date ON Attendance(AttendanceDate);
+CREATE INDEX IX_Attendance_Status ON Attendance(Status);
+CREATE INDEX IX_Attendance_EmployeeDate ON Attendance(EmployeeId, AttendanceDate);
+GO
+
+PRINT '✓ Đã tạo các chỉ mục trên bảng Attendance!';
+GO
+
+-- =============================================
+-- BƯỚC 5B: THÊM DỮ LIỆU CHẤM CÔNG MẪU (CẢI TIẾN)
 -- =============================================
 PRINT '';
 PRINT '📋 BƯỚC 5B: Thêm dữ liệu chấm công cho 15 ngày gần đây...';
 
 -- Tạo dữ liệu chấm công cho 15 ngày gần đây
-DECLARE @StartDate DATE = DATEADD(DAY, -15, GETDATE());
+DECLARE @StartDate DATE = DATEADD(DAY, -15, CAST(GETDATE() AS DATE));
 DECLARE @CurrentDate DATE = @StartDate;
 DECLARE @EmployeeId INT = 1;
 DECLARE @MaxEmployeeId INT = 22;
+DECLARE @RecordCount INT = 0;
 
-WHILE @CurrentDate <= GETDATE()
+WHILE @CurrentDate <= CAST(GETDATE() AS DATE)
 BEGIN
     -- Chỉ tạo chấm công cho ngày làm việc (thứ 2-6)
     IF DATEPART(WEEKDAY, @CurrentDate) BETWEEN 2 AND 6
     BEGIN
         SET @EmployeeId = 1;
     
-   WHILE @EmployeeId <= @MaxEmployeeId
+        WHILE @EmployeeId <= @MaxEmployeeId
         BEGIN
-      DECLARE @CheckInTime DATETIME;
-            DECLARE @CheckOutTime DATETIME;
-     DECLARE @IsLate BIT = 0;
-      DECLARE @LateMinutes INT = 0;
-     DECLARE @WorkingHours DECIMAL(5,2);
-            DECLARE @Status NVARCHAR(20) = 'Present';
-         
-     -- Random attendance pattern (90% present, 5% late, 5% absent)
-      DECLARE @AttendanceType INT = CAST(RAND() * 100 AS INT);
-    
-       IF @AttendanceType < 5 -- 5% absent
+DECLARE @CheckInTime DATETIME = NULL;
+            DECLARE @CheckOutTime DATETIME = NULL;
+    DECLARE @IsLate BIT = 0;
+            DECLARE @LateMinutes INT = 0;
+            DECLARE @WorkingHours DECIMAL(5,2) = 0;
+         DECLARE @Status NVARCHAR(20) = 'Present';
+        DECLARE @OvertimeHours DECIMAL(5,2) = 0;
+   
+            -- Random attendance pattern (85% present, 10% late, 5% absent)
+     DECLARE @AttendanceType INT = ABS(CHECKSUM(NEWID())) % 100;
+
+            IF @AttendanceType < 5 -- 5% absent
             BEGIN
-      SET @Status = 'Absent';
-   SET @CheckInTime = NULL;
-    SET @CheckOutTime = NULL;
-       SET @WorkingHours = 0;
-      END
-            ELSE IF @AttendanceType < 10 -- 5% late  
-       BEGIN
-             SET @LateMinutes = CAST(RAND() * 60 + 10 AS INT); -- 10-70 minutes late
-                SET @CheckInTime = DATEADD(MINUTE, 480 + @LateMinutes, @CurrentDate); -- 8:00 AM + late minutes
-      SET @CheckOutTime = DATEADD(HOUR, 8, @CheckInTime); -- 8 hours later
-   SET @IsLate = 1;
-    SET @WorkingHours = 8.0;
-     SET @Status = 'Late';
-END
-  ELSE -- 90% on time
- BEGIN
-         -- Random check-in between 7:45-8:15
-                DECLARE @CheckInVariation INT = CAST(RAND() * 30 - 15 AS INT); -- -15 to +15 minutes
-          SET @CheckInTime = DATEADD(MINUTE, 480 + @CheckInVariation, @CurrentDate); -- 8:00 AM +/- variation
-          SET @CheckOutTime = DATEADD(HOUR, 8, @CheckInTime); -- 8 hours later
-        SET @WorkingHours = 8.0;
-                
-            IF @CheckInVariation > 15
-        BEGIN
-         SET @IsLate = 1;
-     SET @LateMinutes = @CheckInVariation - 15;
-         SET @Status = 'Late';
-    END
+         SET @Status = 'Absent';
+         SET @CheckInTime = NULL;
+                SET @CheckOutTime = NULL;
+                SET @WorkingHours = 0;
+            SET @IsLate = 0;
+      SET @LateMinutes = 0;
+            SET @OvertimeHours = 0;
             END
-    
-            -- Insert attendance record
-    IF NOT EXISTS (SELECT 1 FROM Attendance WHERE EmployeeId = @EmployeeId AND AttendanceDate = @CurrentDate)
+  ELSE IF @AttendanceType < 15 -- 10% late  
+     BEGIN
+SET @LateMinutes = ABS(CHECKSUM(NEWID())) % 60 + 10; -- 10-69 minutes late
+      -- Convert DATE to DATETIME first, then add minutes
+      SET @CheckInTime = DATEADD(MINUTE, 480 + @LateMinutes, CAST(@CurrentDate AS DATETIME)); -- 8:00 AM + late minutes
+    SET @CheckOutTime = DATEADD(MINUTE, 480, @CheckInTime); -- 8 hours later
+       SET @IsLate = 1;
+          SET @WorkingHours = 8.0;
+    SET @Status = 'Late';
+   
+-- Random overtime (30% chance for late people)
+       IF (ABS(CHECKSUM(NEWID())) % 100) < 30
+        BEGIN
+         SET @OvertimeHours = (ABS(CHECKSUM(NEWID())) % 3) + 1; -- 1-3 hours OT
+           SET @CheckOutTime = DATEADD(HOUR, @OvertimeHours, @CheckOutTime);
+      END
+            END
+ ELSE -- 85% on time
+          BEGIN
+     -- Random check-in between 7:45-8:00 (early) or 8:00-8:15 (on time)
+                DECLARE @CheckInVariation INT = (ABS(CHECKSUM(NEWID())) % 30) - 15; -- -15 to +15 minutes
+     -- Convert DATE to DATETIME first, then add minutes
+   SET @CheckInTime = DATEADD(MINUTE, 480 + @CheckInVariation, CAST(@CurrentDate AS DATETIME)); -- 8:00 AM +/- variation
+           SET @CheckOutTime = DATEADD(MINUTE, 480, @CheckInTime); -- 8 hours later
+SET @WorkingHours = 8.0;
+          SET @Status = 'Present';
+     SET @IsLate = 0;
+ SET @LateMinutes = 0;
+  
+                -- Mark as late if check-in after 8:15
+   IF @CheckInVariation > 15
+       BEGIN
+       SET @IsLate = 1;
+         SET @LateMinutes = @CheckInVariation - 15;
+                    SET @Status = 'Late';
+                END
+       
+       -- Random overtime (20% chance for on-time people)
+       IF (ABS(CHECKSUM(NEWID())) % 100) < 20
     BEGIN
+        SET @OvertimeHours = (ABS(CHECKSUM(NEWID())) % 3) + 1; -- 1-3 hours OT
+       SET @CheckOutTime = DATEADD(HOUR, @OvertimeHours, @CheckOutTime);
+                END
+            END
+            
+      -- Insert attendance record (chỉ insert nếu chưa tồn tại)
+            IF NOT EXISTS (SELECT 1 FROM Attendance WHERE EmployeeId = @EmployeeId AND AttendanceDate = @CurrentDate)
+          BEGIN
  INSERT INTO Attendance (
-       EmployeeId, AttendanceDate, CheckInTime, CheckOutTime, 
-     WorkingHours, Status, IsLate, LateMinutes, CreatedBy
-    ) VALUES (
-       @EmployeeId, @CurrentDate, @CheckInTime, @CheckOutTime,
-      @WorkingHours, @Status, @IsLate, @LateMinutes, 'admin'
-         );
-          END            
-    SET @EmployeeId = @EmployeeId + 1;
+         EmployeeId, AttendanceDate, CheckInTime, CheckOutTime, 
+    WorkingHours, Status, IsLate, LateMinutes, OvertimeHours, CreatedBy
+   ) VALUES (
+      @EmployeeId, @CurrentDate, @CheckInTime, @CheckOutTime,
+         @WorkingHours, @Status, @IsLate, @LateMinutes, @OvertimeHours, 'admin'
+        );
+   
+         SET @RecordCount = @RecordCount + 1;
+            END      
+            
+      SET @EmployeeId = @EmployeeId + 1;
         END
     END
     
     SET @CurrentDate = DATEADD(DAY, 1, @CurrentDate);
 END
 
-PRINT '✓ Đã thêm dữ liệu chấm công cho 15 ngày gần đây!';
+PRINT '✓ Đã thêm ' + CAST(@RecordCount AS NVARCHAR(10)) + ' bản ghi chấm công cho 15 ngày gần đây!';
 GO
 
 -- =============================================
@@ -396,15 +482,15 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-SELECT
-        COUNT(*) as TotalDays,
-        SUM(CASE WHEN Status = 'Present' OR Status = 'Late' THEN 1 ELSE 0 END) as PresentDays,
+    SELECT
+COUNT(*) as TotalDays,
+ SUM(CASE WHEN Status = 'Present' OR Status = 'Late' THEN 1 ELSE 0 END) as PresentDays,
         SUM(CASE WHEN Status = 'Absent' THEN 1 ELSE 0 END) as AbsentDays,
-        SUM(CASE WHEN Status = 'Leave' THEN 1 ELSE 0 END) as LeaveDays,
+      SUM(CASE WHEN Status = 'Leave' THEN 1 ELSE 0 END) as LeaveDays,
         SUM(CASE WHEN IsLate = 1 THEN 1 ELSE 0 END) as LateDays,
-     SUM(LateMinutes) as TotalLateMinutes,
+        SUM(LateMinutes) as TotalLateMinutes,
      SUM(OvertimeHours) as TotalOvertimeHours,
-SUM(WorkingHours) as TotalWorkingHours
+ SUM(WorkingHours) as TotalWorkingHours
     FROM Attendance
     WHERE EmployeeId = @EmployeeId
       AND MONTH(AttendanceDate) = @Month
@@ -417,18 +503,18 @@ GO
 
 -- SP: Calculate payroll for an employee
 CREATE PROCEDURE sp_CalculatePayroll
-  @EmployeeId INT,
-  @Month INT,
-    @Year INT
+    @EmployeeId INT,
+    @Month INT,
+  @Year INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-  DECLARE @BaseSalary DECIMAL(18,2);
+    DECLARE @BaseSalary DECIMAL(18,2);
     DECLARE @WorkingDays INT;
     DECLARE @StandardDays INT = 26;
     DECLARE @OvertimeHours DECIMAL(5,2);
-    DECLARE @LateMinutes INT;
+  DECLARE @LateMinutes INT;
     DECLARE @LatePenaltyRate DECIMAL(18,2) = 5000;
 
     -- Get employee salary
@@ -436,31 +522,31 @@ BEGIN
 
     -- Get attendance summary
     SELECT
-        @WorkingDays = SUM(CASE WHEN Status IN ('Present', 'Late') THEN 1 ELSE 0 END),
- @OvertimeHours = ISNULL(SUM(OvertimeHours), 0),
+  @WorkingDays = SUM(CASE WHEN Status IN ('Present', 'Late') THEN 1 ELSE 0 END),
+     @OvertimeHours = ISNULL(SUM(OvertimeHours), 0),
         @LateMinutes = ISNULL(SUM(LateMinutes), 0)
     FROM Attendance
-  WHERE EmployeeId = @EmployeeId
+    WHERE EmployeeId = @EmployeeId
       AND MONTH(AttendanceDate) = @Month
       AND YEAR(AttendanceDate) = @Year;
 
     -- Calculate components
     DECLARE @ActualSalary DECIMAL(18,2) = (@BaseSalary / @StandardDays) * ISNULL(@WorkingDays, 0);
-    DECLARE @OvertimePay DECIMAL(18,2) = @OvertimeHours * (@BaseSalary / @StandardDays / 8) * 1.5;
+DECLARE @OvertimePay DECIMAL(18,2) = @OvertimeHours * (@BaseSalary / @StandardDays / 8) * 1.5;
     DECLARE @LatePenalty DECIMAL(18,2) = @LateMinutes * @LatePenaltyRate;
     DECLARE @SocialIns DECIMAL(18,2) = @BaseSalary * 0.08;
-  DECLARE @HealthIns DECIMAL(18,2) = @BaseSalary * 0.015;
+    DECLARE @HealthIns DECIMAL(18,2) = @BaseSalary * 0.015;
     DECLARE @UnemplIns DECIMAL(18,2) = @BaseSalary * 0.01;
 
     SELECT
-     @BaseSalary as BaseSalary,
+        @BaseSalary as BaseSalary,
         ISNULL(@WorkingDays, 0) as WorkingDays,
-     @StandardDays as StandardDays,
-        @ActualSalary as ActualSalary,
+        @StandardDays as StandardDays,
+ @ActualSalary as ActualSalary,
         @OvertimePay as OvertimePay,
         @LatePenalty as LatePenalty,
-        @SocialIns as SocialInsurance,
-        @HealthIns as HealthInsurance,
+      @SocialIns as SocialInsurance,
+  @HealthIns as HealthInsurance,
         @UnemplIns as UnemploymentInsurance;
 END
 GO
@@ -472,22 +558,22 @@ GO
 CREATE PROCEDURE sp_GetDashboardStats
 AS
 BEGIN
-  SET NOCOUNT ON;
+    SET NOCOUNT ON;
 
-    -- Basic employee stats
+-- Basic employee stats
     SELECT
-     COUNT(*) as TotalEmployees,
-        SUM(CASE WHEN Status = 'Active' THEN 1 ELSE 0 END) as ActiveEmployees,
+        COUNT(*) as TotalEmployees,
+SUM(CASE WHEN Status = 'Active' THEN 1 ELSE 0 END) as ActiveEmployees,
         SUM(CASE WHEN Status = 'OnLeave' THEN 1 ELSE 0 END) as OnLeaveEmployees,
         SUM(CASE WHEN Status = 'Resigned' THEN 1 ELSE 0 END) as ResignedEmployees,
-AVG(Salary) as AverageSalary
+        AVG(Salary) as AverageSalary
     FROM Employees;
 
     -- Employees by department
     SELECT
         ISNULL(d.DepartmentName, N'Chưa phân bổ') as Department,
         COUNT(e.Id) as EmployeeCount
-    FROM Employees e
+  FROM Employees e
     LEFT JOIN Departments d ON e.DepartmentId = d.Id
     WHERE e.Status = 'Active'
     GROUP BY d.DepartmentName;
@@ -495,9 +581,9 @@ AVG(Salary) as AverageSalary
     -- Employees by gender
     SELECT
         Gender,
-        COUNT(*) as Count
+    COUNT(*) as Count
     FROM Employees
-  WHERE Status = 'Active'
+    WHERE Status = 'Active'
     GROUP BY Gender;
 END
 GO
@@ -519,9 +605,9 @@ SELECT
     e.EmployeeCode,
     e.FullName,
     e.Gender,
-e.DateOfBirth,
+ e.DateOfBirth,
     DATEDIFF(YEAR, e.DateOfBirth, GETDATE()) as Age,
-    e.Email,
+  e.Email,
     e.PhoneNumber,
     e.Address,
     e.Position,
@@ -530,7 +616,7 @@ e.DateOfBirth,
     d.DepartmentCode,
     e.Salary,
     e.HireDate,
- e.Status,
+    e.Status,
     e.PhotoPath,
     u.Username as UserAccount
 FROM Employees e
@@ -549,7 +635,7 @@ SELECT
     e.EmployeeCode,
     e.FullName as EmployeeName,
     d.DepartmentName,
- a.AttendanceDate,
+    a.AttendanceDate,
     a.CheckInTime,
     a.CheckOutTime,
     a.WorkingHours,
@@ -581,7 +667,7 @@ PRINT '----------------------------';
 SELECT
     Id AS [ID],
     FullName AS [Họ Tên],
-  Gender AS [GT],
+    Gender AS [GT],
     CONVERT(VARCHAR(10), DateOfBirth, 103) AS [Ngày Sinh],
     Position AS [Chức Vụ],
     ISNULL(Department, N'Chưa phân bổ') AS [Phòng Ban],
@@ -598,7 +684,7 @@ SELECT
     COUNT(e.Id) AS [Số NV],
     d.DepartmentCode AS [Mã PB],
     mgr.FullName AS [Trưởng Phòng],
-  FORMAT(AVG(e.Salary), 'N0') + ' VNĐ' AS [Lương TB],
+    FORMAT(AVG(e.Salary), 'N0') + ' VNĐ' AS [Lương TB],
     FORMAT(MIN(e.Salary), 'N0') + ' VNĐ' AS [Lương Min],
     FORMAT(MAX(e.Salary), 'N0') + ' VNĐ' AS [Lương Max]
 FROM Departments d
@@ -622,14 +708,17 @@ GROUP BY Gender;
 PRINT '';
 PRINT '📈 THỐNG KÊ CHẤM CÔNG HÔM NAY:';
 PRINT '-----------------------------';
-IF EXISTS (SELECT 1 FROM Attendance WHERE AttendanceDate = CAST(GETDATE() AS DATE))
+
+DECLARE @TodayDate DATE = CAST(GETDATE() AS DATE);
+
+IF EXISTS (SELECT 1 FROM Attendance WHERE AttendanceDate = @TodayDate)
 BEGIN
     SELECT 
         Status as [Trạng Thái],
-        COUNT(*) as [Số Lượng],
-        CAST(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Attendance WHERE AttendanceDate = CAST(GETDATE() AS DATE)) AS DECIMAL(5,1)) as [Tỷ Lệ %]
+    COUNT(*) as [Số Lượng],
+        CAST(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Attendance WHERE AttendanceDate = @TodayDate) AS DECIMAL(5,1)) as [Tỷ Lệ %]
     FROM Attendance 
-    WHERE AttendanceDate = CAST(GETDATE() AS DATE)
+    WHERE AttendanceDate = @TodayDate
     GROUP BY Status
     ORDER BY COUNT(*) DESC;
 END
@@ -643,7 +732,7 @@ PRINT '📊 TỔNG KẾT:';
 PRINT '----------------------------';
 SELECT
     COUNT(*) AS [Tổng số nhân viên],
-    FORMAT(AVG(Salary), 'N0') + ' VNĐ' AS [Lương trung bình],
+  FORMAT(AVG(Salary), 'N0') + ' VNĐ' AS [Lương trung bình],
     FORMAT(SUM(Salary), 'N0') + ' VNĐ' AS [Tổng chi phí lương]
 FROM Employees;
 
@@ -681,3 +770,10 @@ SELECT
     'Tài khoản user' as [Loại], 
     COUNT(*) as [Số lượng] 
 FROM Users WHERE IsActive = 1;
+
+PRINT '';
+PRINT '✅ DATABASE SETUP COMPLETED SUCCESSFULLY!';
+PRINT '==========================================';
+PRINT '';
+PRINT 'Bạn có thể bắt đầu sử dụng database QuanLyNhanSu ngay bây giờ!';
+PRINT 'Tất cả dữ liệu đã được tạo đúng cấu trúc và ràng buộc.';

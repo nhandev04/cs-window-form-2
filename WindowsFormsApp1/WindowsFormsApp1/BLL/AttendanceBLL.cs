@@ -218,5 +218,20 @@ namespace WindowsFormsApp1.BLL
                 return false;
             }
         }
+
+        /// <summary>
+        /// Get attendance by ID
+        /// </summary>
+        public Attendance GetAttendanceById(int id)
+        {
+            try
+            {
+                return attendanceDAL.GetAttendanceById(id);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Lỗi khi lấy thông tin chấm công: " + ex.Message);
+            }
+        }
     }
 }

@@ -65,6 +65,7 @@
             this.cboFilterPosition = new System.Windows.Forms.ComboBox();
             this.lblFilterPosition = new System.Windows.Forms.Label();
             this.btnClearFilter = new System.Windows.Forms.Button();
+            this.btnExportExcel = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -419,6 +420,7 @@
             //
             // panelSearch
             //
+            this.panelSearch.Controls.Add(this.btnExportExcel);
             this.panelSearch.Controls.Add(this.btnClearFilter);
             this.panelSearch.Controls.Add(this.lblFilterPosition);
             this.panelSearch.Controls.Add(this.cboFilterPosition);
@@ -522,6 +524,19 @@
             this.btnClearFilter.UseVisualStyleBackColor = false;
             this.btnClearFilter.Click += new System.EventHandler(this.btnClearFilter_Click);
             //
+            // btnExportExcel
+            //
+            this.btnExportExcel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
+            this.btnExportExcel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnExportExcel.ForeColor = System.Drawing.Color.White;
+            this.btnExportExcel.Location = new System.Drawing.Point(810, 36);
+            this.btnExportExcel.Name = "btnExportExcel";
+            this.btnExportExcel.Size = new System.Drawing.Size(100, 30);
+            this.btnExportExcel.TabIndex = 9;
+            this.btnExportExcel.Text = "Export Excel";
+            this.btnExportExcel.UseVisualStyleBackColor = false;
+            this.btnExportExcel.Click += new System.EventHandler(this.btnExportExcel_Click);
+            //
             // Form1
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -590,6 +605,7 @@
         private System.Windows.Forms.ComboBox cboFilterPosition;
         private System.Windows.Forms.Label lblFilterPosition;
         private System.Windows.Forms.Button btnClearFilter;
+        private System.Windows.Forms.Button btnExportExcel;
     }
 }
 

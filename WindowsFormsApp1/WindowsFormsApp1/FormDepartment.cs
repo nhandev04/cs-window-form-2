@@ -385,6 +385,68 @@ namespace WindowsFormsApp1
             ClearForm();
         }
 
+        private void btnExportExcel_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Get current department list
+                List<Department> departmentsToExport = GetCurrentDepartmentList();
+
+                if (departmentsToExport == null || departmentsToExport.Count == 0)
+                {
+                    MessageBox.Show("Không có dữ liệu phòng ban để xuất!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // Show progress
+                this.Cursor = Cursors.WaitCursor;
+
+                // Export to Excel
+                ExcelHelper.ExportDepartmentsToExcel(departmentsToExport);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi xuất Excel: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        /// <summary>
+        /// Get current department list from DataGridView
+        /// </summary>
+        private List<Department> GetCurrentDepartmentList()
+        {
+            List<Department> departments = new List<Department>();
+
+            try
+            {
+                foreach (DataGridViewRow row in dgvDepartments.Rows)
+                {
+                    if (row.Cells["ID"].Value != null)
+                    {
+                        int deptId = Convert.ToInt32(row.Cells["ID"].Value);
+                        Department dept = departmentBLL.GetDepartmentById(deptId);
+                        if (dept != null)
+                        {
+                            departments.Add(dept);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi lấy danh sách phòng ban: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return departments;
+        }
+
         private void txtSearch_TextChanged(object sender, EventArgs e)
         {
             try

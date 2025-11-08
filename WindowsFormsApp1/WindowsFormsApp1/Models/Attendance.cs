@@ -28,6 +28,11 @@ namespace WindowsFormsApp1.Models
         public string EmployeeCode { get; set; }
 
         /// <summary>
+        /// Department name (for display - loaded from Departments table via Employees)
+        /// </summary>
+        public string DepartmentName { get; set; }
+
+        /// <summary>
         /// Attendance date
         /// </summary>
         public DateTime AttendanceDate { get; set; }
