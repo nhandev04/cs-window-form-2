@@ -17,6 +17,9 @@ namespace WindowsFormsApp1
         private bool isNewEmployee = false;
         private string selectedPhotoPath = null;
         private const string PHOTO_FOLDER = "EmployeePhotos";
+        
+        // Cache for departments to improve performance
+        private List<Department> cachedDepartments = null;
 
         public Form1()
         {
@@ -156,86 +159,107 @@ namespace WindowsFormsApp1
         private void LoadFilterDropdowns()
         {
             try
-            {
-                // Load Gender filter
-                cboFilterGender.Items.Clear();
-                cboFilterGender.Items.Add("-- All --");
-                cboFilterGender.Items.Add("Male");
-                cboFilterGender.Items.Add("Female");
-                cboFilterGender.Items.Add("Other");
-                if (cboFilterGender.Items.Count > 0)
-                {
-                    cboFilterGender.SelectedIndex = 0;
-                }
+       {
+          // Load Gender filter
+          cboFilterGender.Items.Clear();
+          cboFilterGender.Items.Add("-- All --");
+          cboFilterGender.Items.Add("Male");
+          cboFilterGender.Items.Add("Female");
+          cboFilterGender.Items.Add("Other");
+          if (cboFilterGender.Items.Count > 0)
+       {
+     cboFilterGender.SelectedIndex = 0;
+     }
 
-                // Load Department filter
-                cboFilterDepartment.Items.Clear();
-                cboFilterDepartment.Items.Add("-- All --");
-                List<string> departments = employeeBLL.GetDepartments();
-                foreach (string dept in departments)
-                {
-                    cboFilterDepartment.Items.Add(dept);
-                }
-                if (cboFilterDepartment.Items.Count > 0)
-                {
-                    cboFilterDepartment.SelectedIndex = 0;
-                }
-
-                // Load Position filter
-                cboFilterPosition.Items.Clear();
-                cboFilterPosition.Items.Add("-- All --");
-                List<string> positions = employeeBLL.GetPositions();
-                foreach (string pos in positions)
-                {
-                    cboFilterPosition.Items.Add(pos);
-                }
-                if (cboFilterPosition.Items.Count > 0)
-                {
-                    cboFilterPosition.SelectedIndex = 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error loading filters: " + ex.Message, "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+             // Load Department filter from database using DepartmentBLL with caching
+    cboFilterDepartment.Items.Clear();
+           cboFilterDepartment.Items.Add(new { Text = "-- All --", Value = (int?)null, DeptName = "" });
+      
+         // Use cached departments or load from database
+        List<Department> departments = cachedDepartments ?? departmentBLL.GetActiveDepartments();
+              if (cachedDepartments == null)
+    {
+       cachedDepartments = departments; // Cache for future use
+ }
+       
+foreach (var dept in departments)
+        {
+      cboFilterDepartment.Items.Add(new
+      {
+     Text = dept.DepartmentName,
+      Value = (int?)dept.Id,
+          DeptName = dept.DepartmentName
+      });
+         }
+     
+       cboFilterDepartment.DisplayMember = "Text";
+           cboFilterDepartment.ValueMember = "Value";
+  
+   if (cboFilterDepartment.Items.Count > 0)
+         {
+   cboFilterDepartment.SelectedIndex = 0;
         }
+
+     // Load Position filter
+   cboFilterPosition.Items.Clear();
+  cboFilterPosition.Items.Add("-- All --");
+    List<string> positions = employeeBLL.GetPositions();
+        foreach (string pos in positions)
+         {
+   cboFilterPosition.Items.Add(pos);
+        }
+if (cboFilterPosition.Items.Count > 0)
+ {
+      cboFilterPosition.SelectedIndex = 0;
+     }
+     }
+ catch (Exception ex)
+            {
+   MessageBox.Show("Error loading filters: " + ex.Message, "Error",
+   MessageBoxButtons.OK, MessageBoxIcon.Error);
+       }
+     }
 
         /// <summary>
         /// Load departments for employee form dropdown
         /// </summary>
         private void LoadDepartmentDropdown()
         {
-            try
-            {
-                cboDepartment.Items.Clear();
+         try
+     {
+      cboDepartment.Items.Clear();
   
-                List<Department> departments = departmentBLL.GetActiveDepartments();
+        // Use cached departments or load from database
+         List<Department> departments = cachedDepartments ?? departmentBLL.GetActiveDepartments();
+              if (cachedDepartments == null)
+    {
+       cachedDepartments = departments; // Cache for future use
+ }
 
-                cboDepartment.Items.Add(new { Text = "-- Chọn phòng ban --", Value = (int?)null, DeptName = "" });
+       cboDepartment.Items.Add(new { Text = "-- Chọn phòng ban --", Value = (int?)null, DeptName = "" });
 
-                foreach (var dept in departments)
-                {
-                    cboDepartment.Items.Add(new
-                    {
-                        Text = dept.DepartmentName,
+   foreach (var dept in departments)
+         {
+          cboDepartment.Items.Add(new
+        {
+       Text = dept.DepartmentName,
      Value = (int?)dept.Id,
-             DeptName = dept.DepartmentName
+          DeptName = dept.DepartmentName
        });
     }
 
-      cboDepartment.DisplayMember = "Text";
-           cboDepartment.ValueMember = "Value";
-            
+  cboDepartment.DisplayMember = "Text";
+    cboDepartment.ValueMember = "Value";
+  
    // Only set SelectedIndex if items exist
         if (cboDepartment.Items.Count > 0)
         {
   cboDepartment.SelectedIndex = 0;
 }
-            }
+          }
      catch (Exception ex)
    {
-       MessageBox.Show("Error loading departments: " + ex.Message, "Error",
+     MessageBox.Show("Error loading departments: " + ex.Message, "Error",
    MessageBoxButtons.OK, MessageBoxIcon.Error);
 }
         }
@@ -574,10 +598,13 @@ namespace WindowsFormsApp1
                     if (employeeBLL.AddEmployee(employee, out message))
                     {
                         MessageBox.Show(message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LoadAllEmployees();
-                        LoadFilterDropdowns();
-                        LoadDepartmentDropdown();
-                        ClearForm();
+                        
+                        // Clear cache and reload data
+             cachedDepartments = null;
+   LoadAllEmployees();
+     LoadFilterDropdowns();
+              LoadDepartmentDropdown();
+      ClearForm();
                     }
                     else
                     {
@@ -590,9 +617,12 @@ namespace WindowsFormsApp1
                     if (employeeBLL.UpdateEmployee(employee, out message))
                     {
                         MessageBox.Show(message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LoadAllEmployees();
-                        LoadFilterDropdowns();
-                        LoadDepartmentDropdown();
+                       
+         // Clear cache and reload data
+            cachedDepartments = null;
+             LoadAllEmployees();
+     LoadFilterDropdowns();
+    LoadDepartmentDropdown();
                     }
                     else
                     {
@@ -657,11 +687,14 @@ namespace WindowsFormsApp1
         /// </summary>
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            LoadAllEmployees();
-            LoadFilterDropdowns();
-            LoadDepartmentDropdown();
-            ClearForm();
-            txtSearch.Text = "";
+            // Clear department cache to force reload from database
+            cachedDepartments = null;
+            
+    LoadAllEmployees();
+     LoadFilterDropdowns();
+   LoadDepartmentDropdown();
+        ClearForm();
+     txtSearch.Text = "";
      
       // Only set SelectedIndex if items exist for filter ComboBoxes
     if (cboFilterGender.Items.Count > 0)
@@ -766,35 +799,52 @@ namespace WindowsFormsApp1
         /// <summary>
         /// Filter changed event - applies when any filter dropdown changes
         /// </summary>
-        private void FilterChanged(object sender, EventArgs e)
+      private void FilterChanged(object sender, EventArgs e)
         {
-            try
+    try
             {
-                string gender = cboFilterGender.SelectedItem?.ToString();
-                if (gender == "-- All --") gender = null;
+       string gender = cboFilterGender.SelectedItem?.ToString();
+             if (gender == "-- All --") gender = null;
 
-                string department = cboFilterDepartment.SelectedItem?.ToString();
-                if (department == "-- All --") department = null;
+               // Handle department filter with object structure
+    string department = null;
+           var selectedDept = cboFilterDepartment.SelectedItem as dynamic;
+              if (selectedDept != null)
+     {
+       try
+ {
+   if (selectedDept.DeptName != null && !string.IsNullOrEmpty(selectedDept.DeptName.ToString()))
+           {
+    department = selectedDept.DeptName.ToString();
+   }
+               }
+       catch (Exception)
+      {
+      // Fallback to simple string if object structure fails
+    string deptString = cboFilterDepartment.SelectedItem?.ToString();
+          if (deptString != "-- All --") department = deptString;
+         }
+    }
 
-                string position = cboFilterPosition.SelectedItem?.ToString();
-                if (position == "-- All --") position = null;
+   string position = cboFilterPosition.SelectedItem?.ToString();
+          if (position == "-- All --") position = null;
 
-                // Apply filters
-                if (gender == null && department == null && position == null)
-                {
-                    LoadAllEmployees();
-                }
-                else
-                {
-                    List<Employee> employees = employeeBLL.FilterEmployees(gender, department, position);
-                    BindEmployeesToGrid(employees);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error applying filters: " + ex.Message, "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+      // Apply filters
+     if (gender == null && department == null && position == null)
+   {
+   LoadAllEmployees();
+       }
+      else
+    {
+      List<Employee> employees = employeeBLL.FilterEmployees(gender, department, position);
+       BindEmployeesToGrid(employees);
+  }
+     }
+      catch (Exception ex)
+    {
+       MessageBox.Show("Error applying filters: " + ex.Message, "Error",
+    MessageBoxButtons.OK, MessageBoxIcon.Error);
+}
         }
 
         /// <summary>
