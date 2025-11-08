@@ -27,12 +27,6 @@ namespace WindowsFormsApp1
             InitializeComponent();
             employeeBLL = new EmployeeBLL();
             departmentBLL = new DepartmentBLL();
-            
-            // Initialize cboDepartment if not initialized in Designer
-            if (cboDepartment == null)
-            {
-                InitializeCboDepartment();
-            }
         }
 
         /// <summary>
@@ -42,12 +36,6 @@ namespace WindowsFormsApp1
         {
             try
             {
-                // Ensure cboDepartment is initialized first
-                if (cboDepartment == null)
-                {
-                    InitializeCboDepartment();
-                }
- 
                 // Load data in proper order
                 LoadDepartmentDropdown(); // Load departments first
                 LoadFilterDropdowns(); // Then load filter dropdowns
@@ -56,33 +44,12 @@ namespace WindowsFormsApp1
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error initializing form: " + ex.Message + "\n\nStack Trace:\n" + ex.StackTrace, "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi khi khởi tạo form:\n\n" + ex.Message +
+                              "\n\nStack Trace:\n" + ex.StackTrace,
+                              "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        /// <summary>
-        /// Initialize Department ComboBox manually if needed
-        /// </summary>
-        private void InitializeCboDepartment()
-        {
-            cboDepartment = new System.Windows.Forms.ComboBox();
-            cboDepartment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            cboDepartment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            cboDepartment.FormattingEnabled = true;
-            cboDepartment.Location = new System.Drawing.Point(123, 181);
-            cboDepartment.Name = "cboDepartment";
-            cboDepartment.Size = new System.Drawing.Size(304, 25);
-            cboDepartment.TabIndex = 11;
-            
-            // Remove txtDepartment if it exists and add cboDepartment
-            var txtDepartment = this.tableLayoutPanel1.Controls["txtDepartment"];
-            if (txtDepartment != null)
-            {
-                this.tableLayoutPanel1.Controls.Remove(txtDepartment);
-            }
-            this.tableLayoutPanel1.Controls.Add(cboDepartment, 1, 5);
-        }
 
         /// <summary>
         /// Load all employees into DataGridView
@@ -160,109 +127,128 @@ namespace WindowsFormsApp1
         private void LoadFilterDropdowns()
         {
             try
-       {
-          // Load Gender filter
-          cboFilterGender.Items.Clear();
-          cboFilterGender.Items.Add("-- All --");
-          cboFilterGender.Items.Add("Male");
-          cboFilterGender.Items.Add("Female");
-          cboFilterGender.Items.Add("Other");
-          if (cboFilterGender.Items.Count > 0)
-       {
-     cboFilterGender.SelectedIndex = 0;
-     }
-
-             // Load Department filter from database using DepartmentBLL with caching
-    cboFilterDepartment.Items.Clear();
-           cboFilterDepartment.Items.Add(new { Text = "-- All --", Value = (int?)null, DeptName = "" });
-      
-         // Use cached departments or load from database
-        List<Department> departments = cachedDepartments ?? departmentBLL.GetActiveDepartments();
-              if (cachedDepartments == null)
-    {
-       cachedDepartments = departments; // Cache for future use
- }
-       
-foreach (var dept in departments)
-        {
-      cboFilterDepartment.Items.Add(new
-      {
-     Text = dept.DepartmentName,
-      Value = (int?)dept.Id,
-          DeptName = dept.DepartmentName
-      });
-         }
-     
-       cboFilterDepartment.DisplayMember = "Text";
-           cboFilterDepartment.ValueMember = "Value";
-  
-   if (cboFilterDepartment.Items.Count > 0)
-         {
-   cboFilterDepartment.SelectedIndex = 0;
-        }
-
-     // Load Position filter
-   cboFilterPosition.Items.Clear();
-  cboFilterPosition.Items.Add("-- All --");
-    List<string> positions = employeeBLL.GetPositions();
-        foreach (string pos in positions)
-         {
-   cboFilterPosition.Items.Add(pos);
-        }
-if (cboFilterPosition.Items.Count > 0)
- {
-      cboFilterPosition.SelectedIndex = 0;
-     }
-     }
- catch (Exception ex)
             {
-   MessageBox.Show("Error loading filters: " + ex.Message, "Error",
-   MessageBoxButtons.OK, MessageBoxIcon.Error);
-       }
-     }
+                // Load Gender filter
+                cboFilterGender.Items.Clear();
+                cboFilterGender.Items.Add("-- All --");
+                cboFilterGender.Items.Add("Male");
+                cboFilterGender.Items.Add("Female");
+                cboFilterGender.Items.Add("Other");
+                if (cboFilterGender.Items.Count > 0)
+                {
+                    cboFilterGender.SelectedIndex = 0;
+                }
+
+                // Load Department filter from database using DepartmentBLL with caching
+                cboFilterDepartment.Items.Clear();
+                cboFilterDepartment.Items.Add(new { Text = "-- All --", Value = (int?)null, DeptName = "" });
+
+                // Use cached departments or load from database
+                List<Department> departments = cachedDepartments ?? departmentBLL.GetActiveDepartments();
+                if (cachedDepartments == null)
+                {
+                    cachedDepartments = departments; // Cache for future use
+                }
+
+                // Debug: Show department count for filter
+                System.Diagnostics.Debug.WriteLine($"Filter: Loaded {departments.Count} departments");
+
+                foreach (var dept in departments)
+                {
+                    cboFilterDepartment.Items.Add(new
+                    {
+                        Text = dept.DepartmentName,
+                        Value = (int?)dept.Id,
+                        DeptName = dept.DepartmentName
+                    });
+                }
+
+                cboFilterDepartment.DisplayMember = "Text";
+                cboFilterDepartment.ValueMember = "Value";
+
+                if (cboFilterDepartment.Items.Count > 0)
+                {
+                    cboFilterDepartment.SelectedIndex = 0;
+                }
+
+                // Load Position filter
+                cboFilterPosition.Items.Clear();
+                cboFilterPosition.Items.Add("-- All --");
+                List<string> positions = employeeBLL.GetPositions();
+                foreach (string pos in positions)
+                {
+                    cboFilterPosition.Items.Add(pos);
+                }
+                if (cboFilterPosition.Items.Count > 0)
+                {
+                    cboFilterPosition.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi load bộ lọc:\n\n" + ex.Message +
+                              "\n\nStack Trace:\n" + ex.StackTrace,
+                              "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
         /// <summary>
         /// Load departments for employee form dropdown
         /// </summary>
         private void LoadDepartmentDropdown()
         {
-         try
-     {
-      cboDepartment.Items.Clear();
-  
-        // Use cached departments or load from database
-         List<Department> departments = cachedDepartments ?? departmentBLL.GetActiveDepartments();
-              if (cachedDepartments == null)
-    {
-       cachedDepartments = departments; // Cache for future use
- }
+            try
+            {
+                // Ensure cboDepartment exists
+                if (cboDepartment == null)
+                {
+                    MessageBox.Show("ComboBox phòng ban chưa được khởi tạo!", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
-       cboDepartment.Items.Add(new { Text = "-- Chọn phòng ban --", Value = (int?)null, DeptName = "" });
+                cboDepartment.Items.Clear();
 
-   foreach (var dept in departments)
-         {
-          cboDepartment.Items.Add(new
-        {
-       Text = dept.DepartmentName,
-     Value = (int?)dept.Id,
-          DeptName = dept.DepartmentName
-       });
-    }
+                // Use cached departments or load from database
+                List<Department> departments = cachedDepartments ?? departmentBLL.GetActiveDepartments();
+                if (cachedDepartments == null)
+                {
+                    cachedDepartments = departments; // Cache for future use
+                }
 
-  cboDepartment.DisplayMember = "Text";
-    cboDepartment.ValueMember = "Value";
-  
-   // Only set SelectedIndex if items exist
-        if (cboDepartment.Items.Count > 0)
-        {
-  cboDepartment.SelectedIndex = 0;
-}
-          }
-     catch (Exception ex)
-   {
-     MessageBox.Show("Error loading departments: " + ex.Message, "Error",
-   MessageBoxButtons.OK, MessageBoxIcon.Error);
-}
+                // Debug: Show department count
+                System.Diagnostics.Debug.WriteLine($"Loaded {departments.Count} departments from database");
+
+                cboDepartment.Items.Add(new { Text = "-- Chọn phòng ban --", Value = (int?)null, DeptName = "" });
+
+                foreach (var dept in departments)
+                {
+                    cboDepartment.Items.Add(new
+                    {
+                        Text = dept.DepartmentName,
+                        Value = (int?)dept.Id,
+                        DeptName = dept.DepartmentName
+                    });
+                }
+
+                cboDepartment.DisplayMember = "Text";
+                cboDepartment.ValueMember = "Value";
+
+                // Only set SelectedIndex if items exist
+                if (cboDepartment.Items.Count > 0)
+                {
+                    cboDepartment.SelectedIndex = 0;
+                }
+
+                // Debug: Show total items in combobox
+                System.Diagnostics.Debug.WriteLine($"cboDepartment now has {cboDepartment.Items.Count} items");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi load danh sách phòng ban:\n\n" + ex.Message +
+                              "\n\nStack Trace:\n" + ex.StackTrace,
+                              "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>

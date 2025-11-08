@@ -52,28 +52,28 @@ namespace WindowsFormsApp1
             this.menuItemDepartments,
             this.menuItemAttendance});
             this.menuItemManagement.Name = "menuItemManagement";
-            this.menuItemManagement.Size = new System.Drawing.Size(90, 20);
-            this.menuItemManagement.Text = "Management";
+            this.menuItemManagement.Size = new System.Drawing.Size(60, 20);
+            this.menuItemManagement.Text = "Quản lý";
             //
             // menuItemEmployees
             //
             this.menuItemEmployees.Name = "menuItemEmployees";
             this.menuItemEmployees.Size = new System.Drawing.Size(180, 22);
-            this.menuItemEmployees.Text = "Employees";
+            this.menuItemEmployees.Text = "Nhân viên";
             this.menuItemEmployees.Click += new System.EventHandler(this.menuItemEmployees_Click);
             //
             // menuItemDepartments
             //
             this.menuItemDepartments.Name = "menuItemDepartments";
             this.menuItemDepartments.Size = new System.Drawing.Size(180, 22);
-            this.menuItemDepartments.Text = "Departments";
+            this.menuItemDepartments.Text = "Phòng ban";
             this.menuItemDepartments.Click += new System.EventHandler(this.menuItemDepartments_Click);
             //
             // menuItemAttendance
             //
             this.menuItemAttendance.Name = "menuItemAttendance";
             this.menuItemAttendance.Size = new System.Drawing.Size(180, 22);
-            this.menuItemAttendance.Text = "Attendance";
+            this.menuItemAttendance.Text = "Chấm công";
             this.menuItemAttendance.Click += new System.EventHandler(this.menuItemAttendance_Click);
             //
             // menuItemSystem
@@ -82,21 +82,21 @@ namespace WindowsFormsApp1
             this.menuItemLogout,
             this.menuItemExit});
             this.menuItemSystem.Name = "menuItemSystem";
-            this.menuItemSystem.Size = new System.Drawing.Size(57, 20);
-            this.menuItemSystem.Text = "System";
+            this.menuItemSystem.Size = new System.Drawing.Size(69, 20);
+            this.menuItemSystem.Text = "Hệ thống";
             //
             // menuItemLogout
             //
             this.menuItemLogout.Name = "menuItemLogout";
             this.menuItemLogout.Size = new System.Drawing.Size(180, 22);
-            this.menuItemLogout.Text = "Logout";
+            this.menuItemLogout.Text = "Đăng xuất";
             this.menuItemLogout.Click += new System.EventHandler(this.menuItemLogout_Click);
             //
             // menuItemExit
             //
             this.menuItemExit.Name = "menuItemExit";
             this.menuItemExit.Size = new System.Drawing.Size(180, 22);
-            this.menuItemExit.Text = "Exit";
+            this.menuItemExit.Text = "Thoát";
             this.menuItemExit.Click += new System.EventHandler(this.menuItemExit_Click);
             //
             // menuItemHelp
@@ -104,14 +104,14 @@ namespace WindowsFormsApp1
             this.menuItemHelp.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuItemAbout});
             this.menuItemHelp.Name = "menuItemHelp";
-            this.menuItemHelp.Size = new System.Drawing.Size(44, 20);
-            this.menuItemHelp.Text = "Help";
+            this.menuItemHelp.Size = new System.Drawing.Size(64, 20);
+            this.menuItemHelp.Text = "Trợ giúp";
             //
             // menuItemAbout
             //
             this.menuItemAbout.Name = "menuItemAbout";
             this.menuItemAbout.Size = new System.Drawing.Size(180, 22);
-            this.menuItemAbout.Text = "About";
+            this.menuItemAbout.Text = "Giới thiệu";
             this.menuItemAbout.Click += new System.EventHandler(this.menuItemAbout_Click);
             //
             // statusStrip
@@ -127,13 +127,14 @@ namespace WindowsFormsApp1
             // toolStripStatusLabel
             //
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
-            this.toolStripStatusLabel.Size = new System.Drawing.Size(39, 17);
-            this.toolStripStatusLabel.Text = "Ready";
+            this.toolStripStatusLabel.Size = new System.Drawing.Size(54, 17);
+            this.toolStripStatusLabel.Text = "Sẵn sàng";
             //
             // FormMain
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(236)))), ((int)(((byte)(240)))), ((int)(((byte)(241)))));
             this.ClientSize = new System.Drawing.Size(1200, 700);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip);
@@ -142,7 +143,7 @@ namespace WindowsFormsApp1
             this.MainMenuStrip = this.menuStrip;
             this.Name = "FormMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Employee Management System";
+            this.Text = "Hệ Thống Quản Lý Nhân Viên";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.FormMain_Load);
             this.menuStrip.ResumeLayout(false);

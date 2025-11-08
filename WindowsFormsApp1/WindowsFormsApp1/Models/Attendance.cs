@@ -58,6 +58,21 @@ namespace WindowsFormsApp1.Models
         public string Status { get; set; }
 
         /// <summary>
+        /// Is employee late for work
+        /// </summary>
+        public bool? IsLate { get; set; }
+
+        /// <summary>
+        /// Late minutes
+        /// </summary>
+        public int? LateMinutes { get; set; }
+
+        /// <summary>
+        /// Overtime hours
+        /// </summary>
+        public decimal? OvertimeHours { get; set; }
+
+        /// <summary>
         /// Notes about the attendance
         /// </summary>
         public string Notes { get; set; }
@@ -88,6 +103,16 @@ namespace WindowsFormsApp1.Models
         /// Working hours display with hours format
         /// </summary>
         public string WorkingHoursDisplay => WorkingHours.HasValue ? $"{WorkingHours.Value:F2}h" : "-";
+
+        /// <summary>
+        /// Overtime hours display
+        /// </summary>
+        public string OvertimeHoursDisplay => OvertimeHours.HasValue && OvertimeHours.Value > 0 ? $"{OvertimeHours.Value:F2}h" : "-";
+
+        /// <summary>
+        /// Late minutes display
+        /// </summary>
+        public string LateMinutesDisplay => LateMinutes.HasValue && LateMinutes.Value > 0 ? $"{LateMinutes.Value} phút" : "-";
 
         /// <summary>
         /// Status display with Vietnamese

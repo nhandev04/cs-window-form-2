@@ -100,14 +100,15 @@
             //
             this.groupBoxDetails.Controls.Add(this.tableLayoutPanel1);
             this.groupBoxDetails.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBoxDetails.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.groupBoxDetails.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.groupBoxDetails.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
             this.groupBoxDetails.Location = new System.Drawing.Point(0, 0);
             this.groupBoxDetails.Name = "groupBoxDetails";
             this.groupBoxDetails.Padding = new System.Windows.Forms.Padding(10);
             this.groupBoxDetails.Size = new System.Drawing.Size(450, 750);
             this.groupBoxDetails.TabIndex = 0;
             this.groupBoxDetails.TabStop = false;
-            this.groupBoxDetails.Text = "Employee Details";
+            this.groupBoxDetails.Text = "Thông Tin Nhân Viên";
             //
             // tableLayoutPanel1
             //
@@ -176,9 +177,9 @@
             this.lblFullName.AutoSize = true;
             this.lblFullName.Location = new System.Drawing.Point(3, 44);
             this.lblFullName.Name = "lblFullName";
-            this.lblFullName.Size = new System.Drawing.Size(71, 17);
+            this.lblFullName.Size = new System.Drawing.Size(58, 17);
             this.lblFullName.TabIndex = 2;
-            this.lblFullName.Text = "Full Name:";
+            this.lblFullName.Text = "Họ tên:";
             //
             // txtFullName
             //
@@ -194,9 +195,9 @@
             this.lblGender.AutoSize = true;
             this.lblGender.Location = new System.Drawing.Point(3, 79);
             this.lblGender.Name = "lblGender";
-            this.lblGender.Size = new System.Drawing.Size(54, 17);
+            this.lblGender.Size = new System.Drawing.Size(66, 17);
             this.lblGender.TabIndex = 4;
-            this.lblGender.Text = "Gender:";
+            this.lblGender.Text = "Giới tính:";
             //
             // cboGender
             //
@@ -204,9 +205,9 @@
             this.cboGender.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboGender.FormattingEnabled = true;
             this.cboGender.Items.AddRange(new object[] {
-            "Male",
-            "Female",
-            "Other"});
+            "Nam",
+            "Nữ",
+            "Khác"});
             this.cboGender.Location = new System.Drawing.Point(123, 75);
             this.cboGender.Name = "cboGender";
             this.cboGender.Size = new System.Drawing.Size(304, 25);
@@ -218,9 +219,9 @@
             this.lblDateOfBirth.AutoSize = true;
             this.lblDateOfBirth.Location = new System.Drawing.Point(3, 114);
             this.lblDateOfBirth.Name = "lblDateOfBirth";
-            this.lblDateOfBirth.Size = new System.Drawing.Size(87, 17);
+            this.lblDateOfBirth.Size = new System.Drawing.Size(74, 17);
             this.lblDateOfBirth.TabIndex = 6;
-            this.lblDateOfBirth.Text = "Date of Birth:";
+            this.lblDateOfBirth.Text = "Ngày sinh:";
             //
             // dtpDateOfBirth
             //
@@ -236,9 +237,9 @@
             this.lblPosition.AutoSize = true;
             this.lblPosition.Location = new System.Drawing.Point(3, 149);
             this.lblPosition.Name = "lblPosition";
-            this.lblPosition.Size = new System.Drawing.Size(58, 17);
+            this.lblPosition.Size = new System.Drawing.Size(60, 17);
             this.lblPosition.TabIndex = 8;
-            this.lblPosition.Text = "Position:";
+            this.lblPosition.Text = "Chức vụ:";
             //
             // txtPosition
             //
@@ -254,9 +255,9 @@
             this.lblDepartment.AutoSize = true;
             this.lblDepartment.Location = new System.Drawing.Point(3, 184);
             this.lblDepartment.Name = "lblDepartment";
-            this.lblDepartment.Size = new System.Drawing.Size(82, 17);
+            this.lblDepartment.Size = new System.Drawing.Size(79, 17);
             this.lblDepartment.TabIndex = 10;
-            this.lblDepartment.Text = "Department:";
+            this.lblDepartment.Text = "Phòng ban:";
             //
             // cboDepartment
             //
@@ -274,9 +275,9 @@
             this.lblSalary.AutoSize = true;
             this.lblSalary.Location = new System.Drawing.Point(3, 219);
             this.lblSalary.Name = "lblSalary";
-            this.lblSalary.Size = new System.Drawing.Size(47, 17);
+            this.lblSalary.Size = new System.Drawing.Size(54, 17);
             this.lblSalary.TabIndex = 12;
-            this.lblSalary.Text = "Salary:";
+            this.lblSalary.Text = "Lương:";
             //
             // txtSalary
             //
@@ -292,19 +293,23 @@
             this.lblPhoto.AutoSize = true;
             this.lblPhoto.Location = new System.Drawing.Point(3, 254);
             this.lblPhoto.Name = "lblPhoto";
-            this.lblPhoto.Size = new System.Drawing.Size(46, 17);
+            this.lblPhoto.Size = new System.Drawing.Size(67, 17);
             this.lblPhoto.TabIndex = 14;
-            this.lblPhoto.Text = "Photo:";
+            this.lblPhoto.Text = "Ảnh đại diện:";
             //
             // btnUploadPhoto
             //
             this.btnUploadPhoto.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.btnUploadPhoto.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(155)))), ((int)(((byte)(89)))), ((int)(((byte)(182)))));
+            this.btnUploadPhoto.FlatAppearance.BorderSize = 0;
+            this.btnUploadPhoto.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnUploadPhoto.ForeColor = System.Drawing.Color.White;
             this.btnUploadPhoto.Location = new System.Drawing.Point(123, 250);
             this.btnUploadPhoto.Name = "btnUploadPhoto";
             this.btnUploadPhoto.Size = new System.Drawing.Size(150, 25);
             this.btnUploadPhoto.TabIndex = 15;
-            this.btnUploadPhoto.Text = "Upload Photo";
-            this.btnUploadPhoto.UseVisualStyleBackColor = true;
+            this.btnUploadPhoto.Text = "Tải ảnh lên";
+            this.btnUploadPhoto.UseVisualStyleBackColor = false;
             this.btnUploadPhoto.Click += new System.EventHandler(this.btnUploadPhoto_Click);
             //
             // pictureBoxPhoto
@@ -335,52 +340,60 @@
             // btnNew
             //
             this.btnNew.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(152)))), ((int)(((byte)(219)))));
+            this.btnNew.FlatAppearance.BorderSize = 0;
             this.btnNew.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnNew.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
             this.btnNew.ForeColor = System.Drawing.Color.White;
             this.btnNew.Location = new System.Drawing.Point(3, 8);
             this.btnNew.Name = "btnNew";
             this.btnNew.Size = new System.Drawing.Size(100, 35);
             this.btnNew.TabIndex = 0;
-            this.btnNew.Text = "New";
+            this.btnNew.Text = "Tạo mới";
             this.btnNew.UseVisualStyleBackColor = false;
             this.btnNew.Click += new System.EventHandler(this.btnNew_Click);
             //
             // btnSave
             //
             this.btnSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(204)))), ((int)(((byte)(113)))));
+            this.btnSave.FlatAppearance.BorderSize = 0;
             this.btnSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnSave.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
             this.btnSave.ForeColor = System.Drawing.Color.White;
             this.btnSave.Location = new System.Drawing.Point(109, 8);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(100, 35);
             this.btnSave.TabIndex = 1;
-            this.btnSave.Text = "Save";
+            this.btnSave.Text = "Lưu";
             this.btnSave.UseVisualStyleBackColor = false;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             //
             // btnDelete
             //
             this.btnDelete.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(76)))), ((int)(((byte)(60)))));
+            this.btnDelete.FlatAppearance.BorderSize = 0;
             this.btnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDelete.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
             this.btnDelete.ForeColor = System.Drawing.Color.White;
             this.btnDelete.Location = new System.Drawing.Point(215, 8);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(100, 35);
             this.btnDelete.TabIndex = 2;
-            this.btnDelete.Text = "Delete";
+            this.btnDelete.Text = "Xóa";
             this.btnDelete.UseVisualStyleBackColor = false;
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             //
             // btnRefresh
             //
             this.btnRefresh.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(149)))), ((int)(((byte)(165)))), ((int)(((byte)(166)))));
+            this.btnRefresh.FlatAppearance.BorderSize = 0;
             this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRefresh.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
             this.btnRefresh.ForeColor = System.Drawing.Color.White;
             this.btnRefresh.Location = new System.Drawing.Point(321, 8);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(100, 35);
             this.btnRefresh.TabIndex = 3;
-            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.Text = "Làm mới";
             this.btnRefresh.UseVisualStyleBackColor = false;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             //
@@ -389,14 +402,15 @@
             this.groupBoxList.Controls.Add(this.dgvEmployees);
             this.groupBoxList.Controls.Add(this.panelSearch);
             this.groupBoxList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBoxList.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.groupBoxList.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.groupBoxList.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
             this.groupBoxList.Location = new System.Drawing.Point(0, 0);
             this.groupBoxList.Name = "groupBoxList";
             this.groupBoxList.Padding = new System.Windows.Forms.Padding(10);
             this.groupBoxList.Size = new System.Drawing.Size(946, 750);
             this.groupBoxList.TabIndex = 0;
             this.groupBoxList.TabStop = false;
-            this.groupBoxList.Text = "Employee List";
+            this.groupBoxList.Text = "Danh Sách Nhân Viên";
             //
             // dgvEmployees
             //
@@ -450,9 +464,9 @@
             this.lblSearch.AutoSize = true;
             this.lblSearch.Location = new System.Drawing.Point(10, 13);
             this.lblSearch.Name = "lblSearch";
-            this.lblSearch.Size = new System.Drawing.Size(48, 17);
+            this.lblSearch.Size = new System.Drawing.Size(68, 17);
             this.lblSearch.TabIndex = 1;
-            this.lblSearch.Text = "Search:";
+            this.lblSearch.Text = "Tìm kiếm:";
             //
             // cboFilterGender
             //
@@ -469,9 +483,9 @@
             this.lblFilterGender.AutoSize = true;
             this.lblFilterGender.Location = new System.Drawing.Point(10, 43);
             this.lblFilterGender.Name = "lblFilterGender";
-            this.lblFilterGender.Size = new System.Drawing.Size(54, 17);
+            this.lblFilterGender.Size = new System.Drawing.Size(66, 17);
             this.lblFilterGender.TabIndex = 3;
-            this.lblFilterGender.Text = "Gender:";
+            this.lblFilterGender.Text = "Giới tính:";
             //
             // cboFilterDepartment
             //
@@ -488,9 +502,9 @@
             this.lblFilterDepartment.AutoSize = true;
             this.lblFilterDepartment.Location = new System.Drawing.Point(210, 43);
             this.lblFilterDepartment.Name = "lblFilterDepartment";
-            this.lblFilterDepartment.Size = new System.Drawing.Size(82, 17);
+            this.lblFilterDepartment.Size = new System.Drawing.Size(79, 17);
             this.lblFilterDepartment.TabIndex = 5;
-            this.lblFilterDepartment.Text = "Department:";
+            this.lblFilterDepartment.Text = "Phòng ban:";
             //
             // cboFilterPosition
             //
@@ -507,33 +521,37 @@
             this.lblFilterPosition.AutoSize = true;
             this.lblFilterPosition.Location = new System.Drawing.Point(470, 43);
             this.lblFilterPosition.Name = "lblFilterPosition";
-            this.lblFilterPosition.Size = new System.Drawing.Size(58, 17);
+            this.lblFilterPosition.Size = new System.Drawing.Size(60, 17);
             this.lblFilterPosition.TabIndex = 7;
-            this.lblFilterPosition.Text = "Position:";
+            this.lblFilterPosition.Text = "Chức vụ:";
             //
             // btnClearFilter
             //
             this.btnClearFilter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(196)))), ((int)(((byte)(15)))));
+            this.btnClearFilter.FlatAppearance.BorderSize = 0;
             this.btnClearFilter.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnClearFilter.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnClearFilter.ForeColor = System.Drawing.Color.White;
             this.btnClearFilter.Location = new System.Drawing.Point(700, 36);
             this.btnClearFilter.Name = "btnClearFilter";
             this.btnClearFilter.Size = new System.Drawing.Size(100, 30);
             this.btnClearFilter.TabIndex = 8;
-            this.btnClearFilter.Text = "Clear Filters";
+            this.btnClearFilter.Text = "Xóa bộ lọc";
             this.btnClearFilter.UseVisualStyleBackColor = false;
             this.btnClearFilter.Click += new System.EventHandler(this.btnClearFilter_Click);
             //
             // btnExportExcel
             //
             this.btnExportExcel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
+            this.btnExportExcel.FlatAppearance.BorderSize = 0;
             this.btnExportExcel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnExportExcel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnExportExcel.ForeColor = System.Drawing.Color.White;
             this.btnExportExcel.Location = new System.Drawing.Point(810, 36);
             this.btnExportExcel.Name = "btnExportExcel";
             this.btnExportExcel.Size = new System.Drawing.Size(100, 30);
             this.btnExportExcel.TabIndex = 9;
-            this.btnExportExcel.Text = "Export Excel";
+            this.btnExportExcel.Text = "Xuất Excel";
             this.btnExportExcel.UseVisualStyleBackColor = false;
             this.btnExportExcel.Click += new System.EventHandler(this.btnExportExcel_Click);
             //
@@ -541,13 +559,14 @@
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(236)))), ((int)(((byte)(240)))), ((int)(((byte)(241)))));
             this.ClientSize = new System.Drawing.Size(1400, 750);
             this.Controls.Add(this.splitContainer1);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.MinimumSize = new System.Drawing.Size(1000, 600);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Employee Management System";
+            this.Text = "Quản Lý Nhân Viên";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
