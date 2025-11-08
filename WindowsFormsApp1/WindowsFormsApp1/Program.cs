@@ -17,10 +17,10 @@ namespace WindowsFormsApp1
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Add error handling to catch startup errors
+            // Show login form first
             try
             {
-                Application.Run(new Form1());
+                Application.Run(new FormLogin());
             }
             catch (Exception ex)
             {
@@ -31,7 +31,7 @@ namespace WindowsFormsApp1
                                     "Vui lòng kiểm tra:\n" +
                                     "1. SQL Server đang chạy\n" +
                                     "2. Database 'QuanLyNhanSu' đã được tạo\n" +
-                                    "3. Bảng 'Employees' đã tồn tại\n" +
+                                    "3. Chạy SQL script Database_QuanLyNhanSu_Full.sql\n" +
                                     "4. Connection string trong App.config đúng";
 
                 MessageBox.Show(errorMessage, "Lỗi Khởi Động",

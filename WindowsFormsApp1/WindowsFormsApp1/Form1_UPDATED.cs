@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
@@ -6,14 +6,16 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using WindowsFormsApp1.BLL;
+using WindowsFormsApp1.DAL;     // NEW: Added for DepartmentDAL
 using WindowsFormsApp1.Models;
+using WindowsFormsApp1.Utils;   // NEW: Added for SessionManager
 
 namespace WindowsFormsApp1
 {
     public partial class Form1 : Form
     {
         private EmployeeBLL employeeBLL;
-        private DepartmentBLL departmentBLL;
+        private DepartmentDAL departmentDAL;  // NEW: For loading departments
         private bool isNewEmployee = false;
         private string selectedPhotoPath = null;
         private const string PHOTO_FOLDER = "EmployeePhotos";
@@ -22,13 +24,7 @@ namespace WindowsFormsApp1
         {
             InitializeComponent();
             employeeBLL = new EmployeeBLL();
-            departmentBLL = new DepartmentBLL();
-            
-            // Initialize cboDepartment if not initialized in Designer
-            if (cboDepartment == null)
-            {
-                InitializeCboDepartment();
-            }
+            departmentDAL = new DepartmentDAL();  // NEW
         }
 
         /// <summary>
@@ -38,46 +34,124 @@ namespace WindowsFormsApp1
         {
             try
             {
-                // Ensure cboDepartment is initialized first
-                if (cboDepartment == null)
+                // NEW: Check login first
+                if (!SessionManager.IsLoggedIn)
                 {
-                    InitializeCboDepartment();
+                    MessageBox.Show("Vui lòng đăng nhập trước!", "Thông Báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    this.Close();
+                    return;
                 }
- 
-                // Load data in proper order
-                LoadDepartmentDropdown(); // Load departments first
-                LoadFilterDropdowns(); // Then load filter dropdowns
-                LoadAllEmployees(); // Finally load employee data
-                ClearForm(); // Clear form controls
+
+                // NEW: Show current user in title bar
+                this.Text = $"Employee Management - User: {SessionManager.FullName} ({SessionManager.Role})";
+
+                // NEW: Check permissions and disable buttons accordingly
+                CheckPermissions();
+
+                // NEW: Load departments into ComboBox
+                LoadDepartments();
+
+                // NEW: Load status options
+                LoadStatusOptions();
+
+                LoadAllEmployees();
+                LoadFilterDropdowns();
+                ClearForm();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error initializing form: " + ex.Message + "\n\nStack Trace:\n" + ex.StackTrace, "Error",
+                MessageBox.Show("Error initializing form: " + ex.Message, "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         /// <summary>
-        /// Initialize Department ComboBox manually if needed
+        /// NEW: Check user permissions and enable/disable buttons
         /// </summary>
-        private void InitializeCboDepartment()
+        private void CheckPermissions()
         {
-            cboDepartment = new System.Windows.Forms.ComboBox();
-            cboDepartment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            cboDepartment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            cboDepartment.FormattingEnabled = true;
-            cboDepartment.Location = new System.Drawing.Point(123, 181);
-            cboDepartment.Name = "cboDepartment";
-            cboDepartment.Size = new System.Drawing.Size(304, 25);
-            cboDepartment.TabIndex = 11;
-            
-            // Remove txtDepartment if it exists and add cboDepartment
-            var txtDepartment = this.tableLayoutPanel1.Controls["txtDepartment"];
-            if (txtDepartment != null)
+            // Admin and HR can do everything
+            if (SessionManager.IsAdmin || SessionManager.IsHR)
             {
-                this.tableLayoutPanel1.Controls.Remove(txtDepartment);
+                // Full access
+                return;
             }
-            this.tableLayoutPanel1.Controls.Add(cboDepartment, 1, 5);
+
+            // Managers can view and edit, but not delete
+            if (SessionManager.Role == "Manager")
+            {
+                btnDelete.Enabled = false;
+            }
+
+            // Regular employees can only view
+            if (SessionManager.Role == "Employee")
+            {
+                btnNew.Enabled = false;
+                btnSave.Enabled = false;
+                btnDelete.Enabled = false;
+                btnUploadPhoto.Enabled = false;
+
+                // Make all input controls readonly
+                txtEmployeeCode.ReadOnly = true;  // NEW control
+                txtFullName.ReadOnly = true;
+                cboGender.Enabled = false;
+                dtpDateOfBirth.Enabled = false;
+                txtEmail.ReadOnly = true;  // NEW control
+                txtPhoneNumber.ReadOnly = true;  // NEW control
+                txtAddress.ReadOnly = true;  // NEW control
+                txtPosition.ReadOnly = true;
+                cboDepartment.Enabled = false;  // NEW control (replaces txtDepartment)
+                txtSalary.ReadOnly = true;
+                dtpHireDate.Enabled = false;  // NEW control
+                cboStatus.Enabled = false;  // NEW control
+                txtNotes.ReadOnly = true;  // NEW control
+            }
+        }
+
+        /// <summary>
+        /// NEW: Load departments into ComboBox
+        /// NOTE: Requires cboDepartment (ComboBox) in Designer
+        /// </summary>
+        private void LoadDepartments()
+        {
+            try
+            {
+                List<Department> departments = departmentDAL.GetActiveDepartments();
+
+                cboDepartment.Items.Clear();
+
+                // Add empty option
+                cboDepartment.Items.Add(new { Text = "-- Chọn phòng ban --", Value = (int?)null });
+
+                // Add all departments
+                foreach (var dept in departments)
+                {
+                    cboDepartment.Items.Add(new { Text = dept.DepartmentName, Value = dept.Id });
+                }
+
+                cboDepartment.DisplayMember = "Text";
+                cboDepartment.ValueMember = "Value";
+                cboDepartment.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi load phòng ban: " + ex.Message, "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// NEW: Load status options into ComboBox
+        /// NOTE: Requires cboStatus (ComboBox) in Designer
+        /// </summary>
+        private void LoadStatusOptions()
+        {
+            cboStatus.Items.Clear();
+            cboStatus.Items.Add("Active");
+            cboStatus.Items.Add("OnLeave");
+            cboStatus.Items.Add("Resigned");
+            cboStatus.SelectedIndex = 0;  // Default to Active
         }
 
         /// <summary>
@@ -93,14 +167,14 @@ namespace WindowsFormsApp1
                 {
                     MessageBox.Show("Không có nhân viên nào trong database.\n\n" +
                                   "Vui lòng chạy script SQL để thêm dữ liệu mẫu:\n" +
-                                  "TaoDatabase_QuanLyNhanSu.sql",
+                                  "Database_QuanLyNhanSu_Full.sql",
                                   "Thông Báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
                 BindEmployeesToGrid(employees);
 
                 // Update status in title bar
-                this.Text = $"Employee Management System - {employees.Count} nhân viên";
+                this.Text = $"Employee Management - User: {SessionManager.FullName} ({SessionManager.Role}) - {employees.Count} nhân viên";
             }
             catch (Exception ex)
             {
@@ -112,31 +186,42 @@ namespace WindowsFormsApp1
 
         /// <summary>
         /// Bind employee list to DataGridView
+        /// UPDATED: Added new columns for Employee Code, Email, Phone, Status, Hire Date
         /// </summary>
         private void BindEmployeesToGrid(List<Employee> employees)
         {
             // Create a DataTable for binding with formatted data
             DataTable dt = new DataTable();
+
+            // Existing columns
             dt.Columns.Add("ID", typeof(int));
+            dt.Columns.Add("Employee Code", typeof(string));  // NEW
             dt.Columns.Add("Full Name", typeof(string));
             dt.Columns.Add("Gender", typeof(string));
             dt.Columns.Add("Age", typeof(int));
-            dt.Columns.Add("Date of Birth", typeof(string));
+            dt.Columns.Add("Email", typeof(string));          // NEW
+            dt.Columns.Add("Phone", typeof(string));          // NEW
             dt.Columns.Add("Position", typeof(string));
-            dt.Columns.Add("Department", typeof(string));
+            dt.Columns.Add("Department", typeof(string));     // Now uses DepartmentName from JOIN
             dt.Columns.Add("Salary", typeof(string));
+            dt.Columns.Add("Status", typeof(string));         // NEW
+            dt.Columns.Add("Hire Date", typeof(string));      // NEW
 
             foreach (var emp in employees)
             {
                 dt.Rows.Add(
                     emp.Id,
+                    emp.EmployeeCode,                         // NEW
                     emp.FullName,
                     emp.Gender,
                     emp.Age,
-                    emp.DateOfBirth.ToString("dd/MM/yyyy"),
+                    emp.Email,                                // NEW
+                    emp.PhoneNumber,                          // NEW
                     emp.Position,
-                    emp.DepartmentDisplay, // Use the display property that handles both DepartmentName and Department
-                    emp.Salary.ToString("N0") + " VND"
+                    emp.DepartmentDisplay,                    // Uses DepartmentName from JOIN or legacy Department
+                    emp.Salary.ToString("N0") + " đ",
+                    emp.StatusDisplay,                        // NEW - Vietnamese display
+                    emp.HireDateDisplay                       // NEW - Formatted date
                 );
             }
 
@@ -145,13 +230,24 @@ namespace WindowsFormsApp1
             // Auto-size columns
             if (dgvEmployees.Columns.Count > 0)
             {
-                dgvEmployees.Columns["ID"].Width = 50;
-                dgvEmployees.Columns["Age"].Width = 50;
+                dgvEmployees.Columns["ID"].Width = 40;
+                dgvEmployees.Columns["Employee Code"].Width = 100;  // NEW
+                dgvEmployees.Columns["Full Name"].Width = 150;
+                dgvEmployees.Columns["Gender"].Width = 60;
+                dgvEmployees.Columns["Age"].Width = 40;
+                dgvEmployees.Columns["Email"].Width = 150;          // NEW
+                dgvEmployees.Columns["Phone"].Width = 100;          // NEW
+                dgvEmployees.Columns["Position"].Width = 120;
+                dgvEmployees.Columns["Department"].Width = 120;
+                dgvEmployees.Columns["Salary"].Width = 100;
+                dgvEmployees.Columns["Status"].Width = 80;          // NEW
+                dgvEmployees.Columns["Hire Date"].Width = 90;       // NEW
             }
         }
 
         /// <summary>
         /// Load filter dropdown values
+        /// UPDATED: Added Status filter
         /// </summary>
         private void LoadFilterDropdowns()
         {
@@ -163,10 +259,7 @@ namespace WindowsFormsApp1
                 cboFilterGender.Items.Add("Male");
                 cboFilterGender.Items.Add("Female");
                 cboFilterGender.Items.Add("Other");
-                if (cboFilterGender.Items.Count > 0)
-                {
-                    cboFilterGender.SelectedIndex = 0;
-                }
+                cboFilterGender.SelectedIndex = 0;
 
                 // Load Department filter
                 cboFilterDepartment.Items.Clear();
@@ -176,10 +269,7 @@ namespace WindowsFormsApp1
                 {
                     cboFilterDepartment.Items.Add(dept);
                 }
-                if (cboFilterDepartment.Items.Count > 0)
-                {
-                    cboFilterDepartment.SelectedIndex = 0;
-                }
+                cboFilterDepartment.SelectedIndex = 0;
 
                 // Load Position filter
                 cboFilterPosition.Items.Clear();
@@ -189,55 +279,22 @@ namespace WindowsFormsApp1
                 {
                     cboFilterPosition.Items.Add(pos);
                 }
-                if (cboFilterPosition.Items.Count > 0)
-                {
-                    cboFilterPosition.SelectedIndex = 0;
-                }
+                cboFilterPosition.SelectedIndex = 0;
+
+                // NEW: Load Status filter
+                // NOTE: Requires cboFilterStatus (ComboBox) in Designer
+                cboFilterStatus.Items.Clear();
+                cboFilterStatus.Items.Add("-- All --");
+                cboFilterStatus.Items.Add("Active");
+                cboFilterStatus.Items.Add("OnLeave");
+                cboFilterStatus.Items.Add("Resigned");
+                cboFilterStatus.SelectedIndex = 0;
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error loading filters: " + ex.Message, "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        /// <summary>
-        /// Load departments for employee form dropdown
-        /// </summary>
-        private void LoadDepartmentDropdown()
-        {
-            try
-            {
-                cboDepartment.Items.Clear();
-  
-                List<Department> departments = departmentBLL.GetActiveDepartments();
-
-                cboDepartment.Items.Add(new { Text = "-- Chọn phòng ban --", Value = (int?)null, DeptName = "" });
-
-                foreach (var dept in departments)
-                {
-                    cboDepartment.Items.Add(new
-                    {
-                        Text = dept.DepartmentName,
-     Value = (int?)dept.Id,
-             DeptName = dept.DepartmentName
-       });
-    }
-
-      cboDepartment.DisplayMember = "Text";
-           cboDepartment.ValueMember = "Value";
-            
-   // Only set SelectedIndex if items exist
-        if (cboDepartment.Items.Count > 0)
-        {
-  cboDepartment.SelectedIndex = 0;
-}
-            }
-     catch (Exception ex)
-   {
-       MessageBox.Show("Error loading departments: " + ex.Message, "Error",
-   MessageBoxButtons.OK, MessageBoxIcon.Error);
-}
         }
 
         /// <summary>
@@ -311,9 +368,20 @@ namespace WindowsFormsApp1
 
         /// <summary>
         /// Load employee data to form controls
+        /// UPDATED: Added mapping for all new fields
+        /// NOTE: New controls required in Designer:
+        /// - txtEmployeeCode (TextBox)
+        /// - txtEmail (TextBox)
+        /// - txtPhoneNumber (TextBox)
+        /// - txtAddress (TextBox, multiline)
+        /// - cboDepartment (ComboBox) - REPLACES txtDepartment
+        /// - cboStatus (ComboBox)
+        /// - dtpHireDate (DateTimePicker)
+        /// - txtNotes (TextBox, multiline)
         /// </summary>
         private void LoadEmployeeToForm(Employee employee)
         {
+            // Existing fields
             txtId.Text = employee.Id.ToString();
             txtFullName.Text = employee.FullName;
             cboGender.SelectedItem = employee.Gender;
@@ -321,10 +389,61 @@ namespace WindowsFormsApp1
             txtPosition.Text = employee.Position;
             txtSalary.Text = employee.Salary.ToString();
 
-            // Set department dropdown
-            SetDepartmentDropdown(employee.DepartmentId, employee.DepartmentDisplay);
+            // NEW FIELDS
+            txtEmployeeCode.Text = employee.EmployeeCode ?? "";
+            txtEmail.Text = employee.Email ?? "";
+            txtPhoneNumber.Text = employee.PhoneNumber ?? "";
+            txtAddress.Text = employee.Address ?? "";
+            txtNotes.Text = employee.Notes ?? "";
 
-            // Load photo from file path
+            // NEW: Department ComboBox (replaces txtDepartment)
+            if (employee.DepartmentId.HasValue)
+            {
+                // Select the department in ComboBox by matching DepartmentId
+                bool found = false;
+                foreach (var item in cboDepartment.Items)
+                {
+                    var deptItem = item as dynamic;
+                    if (deptItem != null && deptItem.Value == employee.DepartmentId)
+                    {
+                        cboDepartment.SelectedItem = item;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    cboDepartment.SelectedIndex = 0;  // Default to "-- Chọn phòng ban --"
+                }
+            }
+            else
+            {
+                cboDepartment.SelectedIndex = 0;
+            }
+
+            // NEW: Hire Date
+            if (employee.HireDate.HasValue)
+            {
+                dtpHireDate.Value = employee.HireDate.Value;
+            }
+            else
+            {
+                dtpHireDate.Value = DateTime.Now;
+            }
+
+            // NEW: Status
+            string status = employee.Status ?? "Active";
+            if (cboStatus.Items.Contains(status))
+            {
+                cboStatus.SelectedItem = status;
+            }
+            else
+            {
+                cboStatus.SelectedIndex = 0;  // Default to Active
+            }
+
+            // Load photo from file path (existing code)
             selectedPhotoPath = employee.PhotoPath;
             if (!string.IsNullOrEmpty(employee.PhotoPath) && File.Exists(employee.PhotoPath))
             {
@@ -364,124 +483,50 @@ namespace WindowsFormsApp1
         }
 
         /// <summary>
-        /// Set department dropdown selection
-        /// </summary>
-        private void SetDepartmentDropdown(int? departmentId, string departmentName)
-        {
-            // Check if cboDepartment exists and has items
-            if (cboDepartment == null || cboDepartment.Items.Count == 0)
-            {
-                return;
-            }
-
-            if (departmentId.HasValue)
-            {
-                // Find by ID first (preferred method)
-                for (int i = 0; i < cboDepartment.Items.Count; i++)
-                {
-                    try
-                    {
-                        var item = cboDepartment.Items[i] as dynamic;
-                        if (item != null && item.Value != null)
-                        {
-                            // Safely convert the Value to int? to handle both int and int? cases
-                           int? itemValue = null;
-       if (item.Value is int intVal)
-    {
-     itemValue = intVal;
-         }
-      else if (item.Value is int?)
-       {
-   itemValue = item.Value;
-        }
-
-     if (itemValue.HasValue && itemValue.Value == departmentId.Value)
-       {
-          cboDepartment.SelectedIndex = i;
-         return;
-           }
- }
-   }
-    catch (Exception)
-  {
-      // Continue to next item if this one fails
-       continue;
-         }
-  }
-  }
-
-            // Fallback: Find by department name
-   if (!string.IsNullOrEmpty(departmentName))
-            {
-    for (int i = 0; i < cboDepartment.Items.Count; i++)
-   {
-       try
-       {
- var item = cboDepartment.Items[i] as dynamic;
-         if (item != null && item.DeptName != null && item.DeptName.ToString() == departmentName)
-     {
-      cboDepartment.SelectedIndex = i;
-         return;
-      }
-         }
-        catch (Exception)
-  {
-    // Continue to next item if this one fails
-        continue;
-       }
-    }
- }
-
-// Default to "-- Chọn phòng ban --" (index 0)
- if (cboDepartment.Items.Count > 0)
- {
-   cboDepartment.SelectedIndex = 0;
-  }
-   }
-
-        /// <summary>
         /// Clear form controls
+        /// UPDATED: Added clearing for all new fields
         /// </summary>
         private void ClearForm()
         {
+            // Existing fields
             txtId.Text = "";
             txtFullName.Text = "";
-  
-       // Only set SelectedIndex if items exist
-    if (cboGender.Items.Count > 0)
-       {
- cboGender.SelectedIndex = -1;
-   }
-    
+            cboGender.SelectedIndex = -1;
             dtpDateOfBirth.Value = DateTime.Now.AddYears(-25);
-    txtPosition.Text = "";
-          
-// Only reset department dropdown if it has items
-  if (cboDepartment != null && cboDepartment.Items.Count > 0)
-     {
-      cboDepartment.SelectedIndex = 0; // Reset to "-- Chọn phòng ban --"
-        }
-     
-     txtSalary.Text = "";
+            txtPosition.Text = "";
+            txtSalary.Text = "";
 
-      // Properly dispose image before clearing
-       if (pictureBoxPhoto.Image != null)
-        {
-    pictureBoxPhoto.Image.Dispose();
-     pictureBoxPhoto.Image = null;
-    }
+            // NEW FIELDS
+            txtEmployeeCode.Text = "";
+            txtEmail.Text = "";
+            txtPhoneNumber.Text = "";
+            txtAddress.Text = "";
+            txtNotes.Text = "";
 
-    selectedPhotoPath = null;
-      isNewEmployee = false;
+            cboDepartment.SelectedIndex = 0;  // Select "-- Chọn phòng ban --"
+            cboStatus.SelectedIndex = 0;      // Default to Active
+            dtpHireDate.Value = DateTime.Now;
+
+            // Properly dispose image before clearing
+            if (pictureBoxPhoto.Image != null)
+            {
+                pictureBoxPhoto.Image.Dispose();
+                pictureBoxPhoto.Image = null;
+            }
+
+            selectedPhotoPath = null;
+            isNewEmployee = false;
         }
 
         /// <summary>
         /// Get employee from form controls
+        /// UPDATED: Added extraction for all new fields
         /// </summary>
         private Employee GetEmployeeFromForm()
         {
             Employee employee = new Employee();
 
+            // Existing fields
             if (!string.IsNullOrWhiteSpace(txtId.Text))
             {
                 employee.Id = Convert.ToInt32(txtId.Text);
@@ -492,61 +537,36 @@ namespace WindowsFormsApp1
             employee.DateOfBirth = dtpDateOfBirth.Value;
             employee.Position = txtPosition.Text.Trim();
 
-            // Get department from dropdown with improved null checking
-   try
-            {
-      var selectedDept = cboDepartment.SelectedItem as dynamic;
-                if (selectedDept != null && selectedDept.Value != null)
-                {
-             // Safely convert the Value to int? to handle both int and int? cases
-      int? departmentIdValue = null;
- if (selectedDept.Value is int intValue)
-           {
-                  departmentIdValue = intValue;
-     }
-           else if (selectedDept.Value is int?)
-      {
-        departmentIdValue = selectedDept.Value;
-        }
-
-      if (departmentIdValue.HasValue && departmentIdValue.Value > 0)
-       {
-     employee.DepartmentId = departmentIdValue.Value;
-           employee.DepartmentName = selectedDept.DeptName?.ToString();
- employee.Department = selectedDept.DeptName?.ToString(); // For backward compatibility
-          }
-          else
-           {
-            employee.DepartmentId = null;
-     employee.DepartmentName = null;
-     employee.Department = null;
- }
-     }
-     else
-        {
-   employee.DepartmentId = null;
-          employee.DepartmentName = null;
-        employee.Department = null;
-     }
-    }
-    catch (Exception)
- {
-     // Fallback: set to null if any error occurs
-                employee.DepartmentId = null;
-        employee.DepartmentName = null;
-      employee.Department = null;
-         }
-
             decimal salary = 0;
-  if (decimal.TryParse(txtSalary.Text, out salary))
-        {
+            if (decimal.TryParse(txtSalary.Text, out salary))
+            {
                 employee.Salary = salary;
             }
 
-        employee.PhotoPath = selectedPhotoPath;
+            employee.PhotoPath = selectedPhotoPath;
 
-      return employee;
-     }
+            // NEW FIELDS
+            employee.EmployeeCode = txtEmployeeCode.Text.Trim();
+            employee.Email = txtEmail.Text.Trim();
+            employee.PhoneNumber = txtPhoneNumber.Text.Trim();
+            employee.Address = txtAddress.Text.Trim();
+            employee.Notes = txtNotes.Text.Trim();
+
+            // NEW: Get DepartmentId from ComboBox
+            var selectedDept = cboDepartment.SelectedItem as dynamic;
+            if (selectedDept != null && selectedDept.Value != null)
+            {
+                employee.DepartmentId = selectedDept.Value;
+            }
+
+            // NEW: Hire Date
+            employee.HireDate = dtpHireDate.Value;
+
+            // NEW: Status
+            employee.Status = cboStatus.SelectedItem?.ToString() ?? "Active";
+
+            return employee;
+        }
 
         /// <summary>
         /// New button click - Prepare form for new employee
@@ -555,11 +575,12 @@ namespace WindowsFormsApp1
         {
             ClearForm();
             isNewEmployee = true;
-            txtFullName.Focus();
+            txtEmployeeCode.Focus();  // Focus on Employee Code for new entry
         }
 
         /// <summary>
         /// Save button click - Add or update employee
+        /// NOTE: Audit logging is now handled automatically in EmployeeBLL
         /// </summary>
         private void btnSave_Click(object sender, EventArgs e)
         {
@@ -571,57 +592,61 @@ namespace WindowsFormsApp1
                 if (isNewEmployee || string.IsNullOrWhiteSpace(txtId.Text))
                 {
                     // Add new employee
+                    // CreatedBy will be set automatically from SessionManager in BLL
                     if (employeeBLL.AddEmployee(employee, out message))
                     {
-                        MessageBox.Show(message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show(message, "Thành Công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         LoadAllEmployees();
                         LoadFilterDropdowns();
-                        LoadDepartmentDropdown();
                         ClearForm();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show(message, "Lỗi Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
                 else
                 {
                     // Update existing employee
+                    // UpdatedBy will be set automatically from SessionManager in BLL
+                    // Audit trail will be logged automatically in BLL
                     if (employeeBLL.UpdateEmployee(employee, out message))
                     {
-                        MessageBox.Show(message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show(message, "Thành Công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         LoadAllEmployees();
                         LoadFilterDropdowns();
-                        LoadDepartmentDropdown();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show(message, "Lỗi Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error saving employee: " + ex.Message, "Error",
+                MessageBox.Show("Lỗi khi lưu nhân viên: " + ex.Message, "Lỗi",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         /// <summary>
         /// Delete button click - Delete selected employee
+        /// NOTE: Audit logging is now handled automatically in EmployeeBLL
         /// </summary>
         private void btnDelete_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtId.Text))
             {
-                MessageBox.Show("Please select an employee to delete.", "Warning",
+                MessageBox.Show("Vui lòng chọn nhân viên cần xóa.", "Cảnh Báo",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             DialogResult result = MessageBox.Show(
-                "Are you sure you want to delete this employee?",
-                "Confirm Delete",
+                "Bạn có chắc chắn muốn xóa nhân viên này?\n\n" +
+                "Tên: " + txtFullName.Text + "\n" +
+                "Mã NV: " + txtEmployeeCode.Text,
+                "Xác Nhận Xóa",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
@@ -632,21 +657,22 @@ namespace WindowsFormsApp1
                     int employeeId = Convert.ToInt32(txtId.Text);
                     string message;
 
+                    // Audit trail will be logged automatically in BLL
                     if (employeeBLL.DeleteEmployee(employeeId, out message))
                     {
-                        MessageBox.Show(message, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show(message, "Thành Công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         LoadAllEmployees();
                         LoadFilterDropdowns();
                         ClearForm();
                     }
                     else
                     {
-                        MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error deleting employee: " + ex.Message, "Error",
+                    MessageBox.Show("Lỗi khi xóa nhân viên: " + ex.Message, "Lỗi",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -654,29 +680,19 @@ namespace WindowsFormsApp1
 
         /// <summary>
         /// Refresh button click - Reload all data
+        /// UPDATED: Reset Status filter as well
         /// </summary>
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             LoadAllEmployees();
             LoadFilterDropdowns();
-            LoadDepartmentDropdown();
             ClearForm();
             txtSearch.Text = "";
-     
-      // Only set SelectedIndex if items exist for filter ComboBoxes
-    if (cboFilterGender.Items.Count > 0)
-       {
- cboFilterGender.SelectedIndex = 0;
-   }
-  if (cboFilterDepartment.Items.Count > 0)
-     {
-   cboFilterDepartment.SelectedIndex = 0;
+            cboFilterGender.SelectedIndex = 0;
+            cboFilterDepartment.SelectedIndex = 0;
+            cboFilterPosition.SelectedIndex = 0;
+            cboFilterStatus.SelectedIndex = 0;  // NEW
         }
-       if (cboFilterPosition.Items.Count > 0)
- {
-     cboFilterPosition.SelectedIndex = 0;
- }
-}
 
         /// <summary>
         /// Upload photo button click - Save to local folder and store path
@@ -739,6 +755,7 @@ namespace WindowsFormsApp1
 
         /// <summary>
         /// Search textbox changed event
+        /// NOTE: Search now includes Employee Code, Email, Phone in EmployeeDAL
         /// </summary>
         private void txtSearch_TextChanged(object sender, EventArgs e)
         {
@@ -752,19 +769,21 @@ namespace WindowsFormsApp1
                 }
                 else
                 {
+                    // Search will now include Employee Code, Email, Phone
                     List<Employee> employees = employeeBLL.SearchEmployees(searchText);
                     BindEmployeesToGrid(employees);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error searching: " + ex.Message, "Error",
+                MessageBox.Show("Lỗi khi tìm kiếm: " + ex.Message, "Lỗi",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         /// <summary>
         /// Filter changed event - applies when any filter dropdown changes
+        /// UPDATED: Added Status filter
         /// </summary>
         private void FilterChanged(object sender, EventArgs e)
         {
@@ -779,46 +798,40 @@ namespace WindowsFormsApp1
                 string position = cboFilterPosition.SelectedItem?.ToString();
                 if (position == "-- All --") position = null;
 
-                // Apply filters
-                if (gender == null && department == null && position == null)
+                // NEW: Status filter
+                string status = cboFilterStatus.SelectedItem?.ToString();
+                if (status == "-- All --") status = null;
+
+                // Apply filters (including status)
+                if (gender == null && department == null && position == null && status == null)
                 {
                     LoadAllEmployees();
                 }
                 else
                 {
-                    List<Employee> employees = employeeBLL.FilterEmployees(gender, department, position);
+                    List<Employee> employees = employeeBLL.FilterEmployees(gender, department, position, status);
                     BindEmployeesToGrid(employees);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error applying filters: " + ex.Message, "Error",
+                MessageBox.Show("Lỗi khi lọc dữ liệu: " + ex.Message, "Lỗi",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         /// <summary>
         /// Clear filter button click
+        /// UPDATED: Reset Status filter as well
         /// </summary>
         private void btnClearFilter_Click(object sender, EventArgs e)
         {
             txtSearch.Text = "";
-      
-// Only set SelectedIndex if items exist
-      if (cboFilterGender.Items.Count > 0)
-       {
-      cboFilterGender.SelectedIndex = 0;
-  }
-        if (cboFilterDepartment.Items.Count > 0)
-     {
-   cboFilterDepartment.SelectedIndex = 0;
-        }
-       if (cboFilterPosition.Items.Count > 0)
- {
-     cboFilterPosition.SelectedIndex = 0;
- }
-       
-    LoadAllEmployees();
+            cboFilterGender.SelectedIndex = 0;
+            cboFilterDepartment.SelectedIndex = 0;
+            cboFilterPosition.SelectedIndex = 0;
+            cboFilterStatus.SelectedIndex = 0;  // NEW
+            LoadAllEmployees();
         }
     }
 }

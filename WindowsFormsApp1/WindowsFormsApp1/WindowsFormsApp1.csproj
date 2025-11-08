@@ -47,20 +47,84 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <!-- BLL Layer -->
     <Compile Include="BLL\EmployeeBLL.cs" />
+    <Compile Include="BLL\UserBLL.cs" />
+    <Compile Include="BLL\DepartmentBLL.cs" />
+    <Compile Include="BLL\AttendanceBLL.cs" />
+
+    <!-- DAL Layer -->
     <Compile Include="DAL\DatabaseConfig.cs" />
     <Compile Include="DAL\EmployeeDAL.cs" />
+    <Compile Include="DAL\UserDAL.cs" />
+    <Compile Include="DAL\DepartmentDAL.cs" />
+    <Compile Include="DAL\AuditLogDAL.cs" />
+    <Compile Include="DAL\AttendanceDAL.cs" />
+
+    <!-- Models -->
     <Compile Include="Models\Employee.cs" />
+    <Compile Include="Models\User.cs" />
+    <Compile Include="Models\Department.cs" />
+    <Compile Include="Models\Attendance.cs" />
+    <Compile Include="Models\Payroll.cs" />
+    <Compile Include="Models\AuditLog.cs" />
+    <Compile Include="Models\DashboardStats.cs" />
+
+    <!-- Utils -->
+    <Compile Include="Utils\SecurityHelper.cs" />
+    <Compile Include="Utils\SessionManager.cs" />
+    <Compile Include="Utils\AuditHelper.cs" />
+
+    <!-- Forms -->
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormLogin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormLogin.Designer.cs">
+      <DependentUpon>FormLogin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormDepartment.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormDepartment.Designer.cs">
+      <DependentUpon>FormDepartment.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormAttendance.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormAttendance.Designer.cs">
+      <DependentUpon>FormAttendance.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormMain.Designer.cs">
+      <DependentUpon>FormMain.cs</DependentUpon>
+    </Compile>
+
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+
+    <!-- Resources -->
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormLogin.resx">
+      <DependentUpon>FormLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormDepartment.resx">
+      <DependentUpon>FormDepartment.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormAttendance.resx">
+      <DependentUpon>FormAttendance.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormMain.resx">
+      <DependentUpon>FormMain.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -42,7 +42,7 @@
             this.lblPosition = new System.Windows.Forms.Label();
             this.txtPosition = new System.Windows.Forms.TextBox();
             this.lblDepartment = new System.Windows.Forms.Label();
-            this.txtDepartment = new System.Windows.Forms.TextBox();
+            this.cboDepartment = new System.Windows.Forms.ComboBox();
             this.lblSalary = new System.Windows.Forms.Label();
             this.txtSalary = new System.Windows.Forms.TextBox();
             this.lblPhoto = new System.Windows.Forms.Label();
@@ -124,7 +124,7 @@
             this.tableLayoutPanel1.Controls.Add(this.lblPosition, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.txtPosition, 1, 4);
             this.tableLayoutPanel1.Controls.Add(this.lblDepartment, 0, 5);
-            this.tableLayoutPanel1.Controls.Add(this.txtDepartment, 1, 5);
+            this.tableLayoutPanel1.Controls.Add(this.cboDepartment, 1, 5);
             this.tableLayoutPanel1.Controls.Add(this.lblSalary, 0, 6);
             this.tableLayoutPanel1.Controls.Add(this.txtSalary, 1, 6);
             this.tableLayoutPanel1.Controls.Add(this.lblPhoto, 0, 7);
@@ -257,13 +257,15 @@
             this.lblDepartment.TabIndex = 10;
             this.lblDepartment.Text = "Department:";
             //
-            // txtDepartment
+            // cboDepartment
             //
-            this.txtDepartment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtDepartment.Location = new System.Drawing.Point(123, 181);
-            this.txtDepartment.Name = "txtDepartment";
-            this.txtDepartment.Size = new System.Drawing.Size(304, 23);
-            this.txtDepartment.TabIndex = 11;
+            this.cboDepartment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.cboDepartment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboDepartment.FormattingEnabled = true;
+            this.cboDepartment.Location = new System.Drawing.Point(123, 181);
+            this.cboDepartment.Name = "cboDepartment";
+            this.cboDepartment.Size = new System.Drawing.Size(304, 25);
+            this.cboDepartment.TabIndex = 11;
             //
             // lblSalary
             //
@@ -567,7 +569,7 @@
         private System.Windows.Forms.Label lblPosition;
         private System.Windows.Forms.TextBox txtPosition;
         private System.Windows.Forms.Label lblDepartment;
-        private System.Windows.Forms.TextBox txtDepartment;
+        private System.Windows.Forms.ComboBox cboDepartment;
         private System.Windows.Forms.Label lblSalary;
         private System.Windows.Forms.TextBox txtSalary;
         private System.Windows.Forms.Label lblPhoto;
